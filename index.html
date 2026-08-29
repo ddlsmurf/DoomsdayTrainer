@@ -1,0 +1,3585 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doomsday Trainer</title>
+<style>
+:root {
+  color-scheme: dark light;
+  --bg: #0b0e14;
+  --bg-2: #10151f;
+  --card: #151b28;
+  --card-2: #1b2333;
+  --line: #26304354;
+  --line-solid: #263043;
+  --fg: #e8edf7;
+  --muted: #92a0b9;
+  --accent: #5eead4;
+  --accent-2: #a78bfa;
+  --good: #34d399;
+  --bad: #fb7185;
+  --warn: #fbbf24;
+  --focus: #7dd3fc;
+  --radius: 14px;
+  --tap: 44px;
+  --gap: 12px;
+  --shadow: 0 10px 30px #00000059;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  html[data-theme="auto"] {
+    --bg: #f4f6fb;
+    --bg-2: #ffffff;
+    --card: #ffffff;
+    --card-2: #f1f4fa;
+    --line: #cfd8e880;
+    --line-solid: #d7dfec;
+    --fg: #161d2b;
+    --muted: #5b6880;
+    --accent: #0d9488;
+    --accent-2: #6d28d9;
+    --good: #059669;
+    --bad: #e11d48;
+    --focus: #0284c7;
+    --shadow: 0 10px 30px #64748b26;
+  }
+}
+html[data-theme="light"] {
+  --bg: #f4f6fb;
+  --bg-2: #ffffff;
+  --card: #ffffff;
+  --card-2: #f1f4fa;
+  --line: #cfd8e880;
+  --line-solid: #d7dfec;
+  --fg: #161d2b;
+  --muted: #5b6880;
+  --accent: #0d9488;
+  --accent-2: #6d28d9;
+  --good: #059669;
+  --bad: #e11d48;
+  --focus: #0284c7;
+  --shadow: 0 10px 30px #64748b26;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 700px at 85% -10%, #a78bfa14, transparent 60%),
+    radial-gradient(900px 600px at 5% 105%, #5eead414, transparent 60%),
+    var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+a { color: var(--accent); }
+h1, h2, h3 { margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.hidden { display: none !important; }
+
+/* ---------- layout ---------- */
+#app {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr) 320px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "top top top" "nav main side";
+  gap: var(--gap);
+  padding: var(--gap);
+  max-width: 1800px;
+  margin: 0 auto;
+}
+.top { grid-area: top; }
+#stepNav { grid-area: nav; }
+.main { grid-area: main; min-width: 0; }
+.side { grid-area: side; }
+
+.panel {
+  background: linear-gradient(180deg, var(--card), var(--card-2));
+  border: 1px solid var(--line-solid);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ---------- header ---------- */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-right: auto;
+}
+.brand b { font-size: 1.12rem; letter-spacing: -0.02em; }
+.brand .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent));
+  align-self: center;
+  animation: spin 9s linear infinite;
+}
+.seg {
+  display: inline-flex;
+  background: var(--card);
+  border: 1px solid var(--line-solid);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg button {
+  border: 0; background: transparent; color: var(--muted);
+  padding: 7px 13px; border-radius: 999px; min-height: 36px;
+  font-size: 0.86rem; font-weight: 600; white-space: nowrap;
+}
+.seg button[aria-pressed="true"] {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #06121a;
+}
+html[data-theme="light"] .seg button[aria-pressed="true"] { color: #fff; }
+.ctl {
+  background: var(--card); border: 1px solid var(--line-solid);
+  border-radius: 10px; padding: 8px 10px; min-height: 40px;
+}
+.iconbtn {
+  background: var(--card); border: 1px solid var(--line-solid);
+  border-radius: 10px; min-width: 40px; min-height: 40px; padding: 0 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 0.85rem; font-weight: 600;
+}
+.iconbtn:hover, .ctl:hover { border-color: var(--accent); }
+.xpwrap { display: flex; align-items: center; gap: 10px; width: 100%; }
+.lvl {
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--accent); white-space: nowrap;
+}
+.xpbar {
+  flex: 1; height: 7px; border-radius: 999px;
+  background: var(--card-2); border: 1px solid var(--line-solid); overflow: hidden;
+}
+.xpbar i {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 600ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* ---------- step nav ---------- */
+#stepNav { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+#stepNav .navhead { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 4px 6px; }
+.step {
+  display: flex; align-items: center; gap: 10px;
+  background: transparent; border: 1px solid transparent; color: var(--fg);
+  border-radius: 10px; padding: 8px; min-height: var(--tap); text-align: left; width: 100%;
+}
+.step:hover { background: var(--card-2); }
+.step[aria-current="true"] { background: var(--card-2); border-color: var(--accent); }
+.step .idx {
+  width: 26px; height: 26px; flex: none; border-radius: 8px;
+  display: grid; place-items: center; font-size: 0.78rem; font-weight: 700;
+  background: var(--bg-2); color: var(--muted); border: 1px solid var(--line-solid);
+}
+.step[aria-current="true"] .idx { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #06121a; }
+.step .lbl { display: flex; flex-direction: column; min-width: 0; }
+.step .lbl b { font-size: 0.9rem; font-weight: 600; }
+.step .lbl span { font-size: 0.72rem; color: var(--muted); }
+.ring { width: 26px; height: 26px; flex: none; margin-left: auto; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 3.5; }
+.ring .bg { stroke: var(--line-solid); }
+.ring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray 500ms ease; }
+
+/* ---------- main / drill ---------- */
+.main { display: flex; flex-direction: column; gap: var(--gap); }
+.banner {
+  padding: 12px 14px; border-radius: var(--radius);
+  border: 1px solid var(--bad); background: #fb718519; font-size: 0.88rem;
+}
+.banner pre { overflow: auto; max-height: 8em; font-size: 0.78rem; }
+.card { padding: 18px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.kicker {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 0.74rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.chip {
+  border-radius: 999px; padding: 3px 10px; font-size: 0.72rem; letter-spacing: 0.04em;
+  border: 1px solid var(--line-solid); background: var(--bg-2); text-transform: none;
+}
+.chip.good { border-color: var(--good); color: var(--good); }
+.chip.bad { border-color: var(--bad); color: var(--bad); }
+.prompt { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; padding: 8px 0 2px; }
+.prompt .ask { font-size: 0.95rem; color: var(--muted); }
+.prompt .subject {
+  font-family: var(--mono); font-weight: 700; letter-spacing: -0.02em;
+  font-size: clamp(1.9rem, 6.5vw, 3.4rem); line-height: 1.05;
+}
+.prompt .sub { font-size: 0.92rem; color: var(--muted); }
+.prompt .given { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.prompt .given .g {
+  background: var(--bg-2); border: 1px solid var(--line-solid); border-radius: 10px;
+  padding: 6px 12px; font-size: 0.86rem;
+}
+.prompt .given .g b { font-family: var(--mono); color: var(--accent); }
+.enter { animation: cardIn 420ms cubic-bezier(.2,.9,.2,1); }
+
+/* ---------- answer pads ---------- */
+.pad { display: grid; gap: 8px; }
+.pad.weekday { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.pad.digit7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.pad.yesno { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pad.number { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.key {
+  position: relative; min-height: 56px; padding: 8px 4px;
+  border-radius: 12px; border: 1px solid var(--line-solid);
+  background: linear-gradient(180deg, var(--card-2), var(--bg-2));
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-weight: 650; font-size: 0.98rem; transition: transform 90ms ease, border-color 120ms ease;
+}
+.pad.number .key { min-height: 44px; font-size: 0.9rem; }
+.key .hintkey { font-size: 0.64rem; color: var(--muted); font-family: var(--mono); }
+.key:hover { border-color: var(--accent); }
+.key:active { transform: translateY(1px) scale(0.98); }
+.key[disabled] { opacity: 0.45; cursor: not-allowed; }
+.key.picked-good { border-color: var(--good); background: #34d39926; animation: pop 320ms ease; }
+.key.picked-bad { border-color: var(--bad); background: #fb718526; animation: shake 380ms ease; }
+.key.reveal { border-color: var(--good); box-shadow: inset 0 0 0 1px var(--good); }
+.numentry {
+  display: flex; align-items: center; gap: 10px; justify-content: center;
+  font-family: var(--mono); font-size: 0.9rem; color: var(--muted);
+}
+.numentry b { font-size: 1.3rem; color: var(--fg); min-width: 2ch; text-align: center; }
+
+/* ---------- how this step works ---------- */
+.modeline { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; color: var(--muted); }
+.modeline b { color: var(--fg); font-weight: 600; }
+.howto { border: 1px solid var(--line-solid); border-radius: 12px; background: var(--bg-2); overflow: hidden; }
+.howto > button {
+  width: 100%; min-height: var(--tap); background: transparent; border: 0; color: var(--fg);
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 0.86rem; font-weight: 600; text-align: left;
+}
+.howto > button .caret { margin-left: auto; color: var(--muted); transition: transform 200ms ease; }
+.howto > button[aria-expanded="true"] .caret { transform: rotate(180deg); }
+.howto-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; font-size: 0.86rem; }
+.howto-body ol, .howto-body ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+/* Each fact is its own chip: run together on one line they read as a single
+ * string, which is exactly what they are not. */
+.facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.facts span {
+  font-family: var(--mono); font-size: 0.8rem; color: var(--accent); white-space: nowrap;
+  border: 1px solid var(--line-solid); border-radius: 8px; padding: 3px 9px;
+  background: var(--bg-2);
+}
+
+/* ---------- feedback + actions ---------- */
+.verdict { display: flex; align-items: center; gap: 10px; font-weight: 650; min-height: 26px; }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .grow { flex: 1 1 auto; }
+.btn {
+  border-radius: 11px; border: 1px solid var(--line-solid); background: var(--card-2);
+  min-height: var(--tap); padding: 0 16px; font-weight: 600; font-size: 0.9rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #06121a; border-color: transparent; }
+html[data-theme="light"] .btn.primary { color: #fff; }
+.btn kbd { font-family: var(--mono); font-size: 0.72rem; opacity: 0.7; }
+
+/* ---------- derivation ---------- */
+.work { display: flex; flex-direction: column; gap: 8px; }
+.work .worktitle { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.wstep {
+  border: 1px solid var(--line-solid); border-radius: 12px; background: var(--bg-2);
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
+  animation: stepIn 380ms cubic-bezier(.2,.9,.2,1) backwards;
+}
+.wstep.focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, 0 0 24px #5eead41f; }
+.wstep h4 { margin: 0; font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.wstep h4 .n {
+  width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
+  background: var(--card-2); border: 1px solid var(--line-solid); font-size: 0.68rem; color: var(--muted);
+}
+.wstep.focus h4 .n { background: var(--accent); color: #06121a; border-color: transparent; }
+.wline { font-family: var(--mono); font-size: 0.86rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.wline .note { font-family: var(--sans); font-size: 0.78rem; color: var(--muted); }
+.wline em { font-style: normal; color: var(--accent); font-weight: 700; }
+.wstep .res { font-size: 0.86rem; }
+.wstep .res b { color: var(--accent); }
+
+/* A chain: each box feeds the next, so a line runs from one to the one below.
+ * The line hangs off the step number, and works the same in one column or three. */
+.chain { display: flex; flex-direction: column; }
+.chain > * { position: relative; margin-bottom: 26px; }
+.chain > *:last-child { margin-bottom: 0; }
+.chain > *::after {
+  content: ""; position: absolute; left: 21px; top: 100%; width: 2px; height: 26px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2)); opacity: 0.45;
+}
+.chain > *::before {
+  content: ""; position: absolute; left: 17px; top: calc(100% + 17px);
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-top: 8px solid var(--accent-2); opacity: 0.7;
+}
+.chain > *:last-child::after, .chain > *:last-child::before { display: none; }
+.chainnote {
+  border: 1px dashed var(--accent); border-radius: 12px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.84rem;
+}
+.chainnote .fork { color: var(--accent); font-size: 1.1rem; }
+.chainnote button {
+  background: transparent; border: 0; padding: 0; color: var(--accent);
+  font: inherit; text-decoration: underline; text-underline-offset: 3px; min-height: 32px;
+}
+.chainhint { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+
+/* Mutually exclusive choices: pick exactly one. Never used for a sequence. */
+.options { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.optioncard {
+  flex: 1 1 280px; border: 1px solid var(--line-solid); border-radius: 12px; padding: 12px;
+  background: var(--bg-2); display: flex; flex-direction: column; gap: 8px;
+}
+.optioncard.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.opthead { display: flex; align-items: center; gap: 8px; }
+.opthead h3 { font-size: 0.95rem; margin-right: auto; }
+.radio {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 2px solid var(--muted); display: grid; place-items: center;
+}
+.optioncard.active .radio { border-color: var(--accent); }
+.optioncard.active .radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.or {
+  flex: 0 0 auto; align-self: center; margin-inline: auto; padding: 4px;
+  font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+.optioncard ul, .optioncard ol { margin: 0; padding-left: 18px; font-size: 0.84rem; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+.optioncard .caption { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.optioncard .btn { margin-top: auto; }
+
+/* ---------- side ---------- */
+.side { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.side .panel { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.side h3 { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.statgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--bg-2); border: 1px solid var(--line-solid); border-radius: 10px; padding: 8px 10px; }
+.stat .v { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; }
+.stat .k { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.stat.hot .v { color: var(--warn); }
+.stat.faint { border-style: dashed; }
+.stat.faint .v { color: var(--muted); opacity: 0.75; }
+.stat .h { margin-top: 2px; font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+.flames { display: flex; gap: 3px; flex-wrap: wrap; }
+.flames i { width: 9px; height: 9px; border-radius: 3px; background: var(--line-solid); }
+.flames i.on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+.ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
+.ach .badge {
+  aspect-ratio: 1; border-radius: 10px; display: grid; place-items: center; font-size: 1.1rem;
+  background: var(--bg-2); border: 1px solid var(--line-solid); filter: grayscale(1); opacity: 0.4;
+}
+.ach .badge.on { filter: none; opacity: 1; border-color: var(--accent); background: #5eead414; }
+.timer { font-family: var(--mono); font-size: 2rem; font-weight: 700; text-align: center; }
+.timer.low { color: var(--bad); animation: pulse 1s infinite; }
+
+.lastseen { display: flex; flex-direction: column; gap: 1px; }
+.lastseen b { font-size: 1.25rem; }
+.lastseen span { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+.nudge {
+  border: 1px solid var(--line-solid); border-left-width: 3px; border-radius: 10px;
+  padding: 8px 10px; font-size: 0.82rem; background: var(--bg-2);
+}
+.nudge.warn { border-left-color: var(--warn); }
+.nudge.info { border-left-color: var(--accent); }
+.nudge.calm { border-left-color: var(--good); }
+.steplist {
+  margin: 0 0 0 9px; padding-left: 22px; display: flex; flex-direction: column; gap: 6px;
+  border-left: 2px solid var(--line-solid);
+}
+.steplist li::marker { color: var(--muted); font-family: var(--mono); }
+.steplist button {
+  background: transparent; border: 0; padding: 4px 0; text-align: left; color: var(--fg);
+  display: flex; flex-direction: column; gap: 1px; width: 100%; min-height: 34px;
+}
+.steplist button b { color: var(--accent); font-size: 0.92rem; }
+.steplist button span { color: var(--muted); font-size: 0.84rem; }
+.steplist button:hover b { text-decoration: underline; }
+
+/* ---------- learn panel ---------- */
+.learn { display: flex; flex-direction: column; gap: 14px; }
+.lsec {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px; border-radius: var(--radius); border: 1px solid var(--line-solid);
+  background: linear-gradient(180deg, hsl(var(--tint) / 0.09), transparent 130px), var(--card);
+  box-shadow: var(--shadow);
+  scroll-margin-top: 12px;
+}
+.lsec > h2 { font-size: 1.05rem; display: flex; align-items: center; gap: 10px; }
+.lsec > h2::before { content: ""; width: 4px; align-self: stretch; min-height: 1.1em; border-radius: 2px; background: hsl(var(--tint)); }
+.lsec.flash {
+  border-color: hsl(var(--tint));
+  box-shadow: inset 0 0 0 1px hsl(var(--tint)), 0 0 34px hsl(var(--tint) / 0.28);
+  animation: sectionFlash 850ms ease-out 2;
+}
+.learn p { margin: 0; font-size: 0.92rem; color: var(--muted); }
+.learn p strong { color: var(--fg); }
+.learn a { text-underline-offset: 3px; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line-solid); }
+.tabs button {
+  background: transparent; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  padding: 8px 14px; min-height: var(--tap); color: var(--muted); font-weight: 600; font-size: 0.86rem;
+}
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: hsl(var(--tint)); }
+.tabs button:hover { color: var(--fg); }
+.cheat { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.cheat th, .cheat td { border: 1px solid var(--line-solid); padding: 6px 8px; text-align: left; }
+.cheat th { background: var(--bg-2); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.cheat td.mono { font-family: var(--mono); }
+.scrollx { overflow-x: auto; }
+.dateform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.dateform input { background: var(--bg-2); border: 1px solid var(--line-solid); border-radius: 10px; padding: 8px 10px; min-height: var(--tap); font-family: var(--mono); font-size: 1rem; }
+.dateform .field { display: flex; flex-direction: column; gap: 2px; }
+.dateform .field > span { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.dateform input.yr { width: 11ch; }
+.dateform input.md { width: 8ch; }
+
+/* ---------- dialogs / toasts ---------- */
+dialog {
+  border: 1px solid var(--line-solid); border-radius: var(--radius); background: var(--card);
+  color: var(--fg); max-width: min(860px, 94vw); width: 100%; padding: 0; box-shadow: var(--shadow);
+}
+dialog::backdrop { background: #030509b8; backdrop-filter: blur(3px); }
+.dlg { padding: 18px; display: flex; flex-direction: column; gap: 14px; max-height: 86vh; overflow: auto; }
+.dlghead { display: flex; align-items: center; gap: 10px; }
+.dlghead h2 { margin-right: auto; font-size: 1.05rem; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+.row > label { font-size: 0.9rem; }
+#toasts {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 60; pointer-events: none; width: min(420px, 92vw);
+}
+.toast {
+  background: var(--card); border: 1px solid var(--accent); border-radius: 12px;
+  padding: 10px 14px; box-shadow: var(--shadow); display: flex; gap: 10px; align-items: center;
+  animation: toastIn 420ms cubic-bezier(.2,.9,.2,1), toastOut 420ms ease 3.4s forwards;
+}
+.toast .em { font-size: 1.5rem; }
+.toast b { display: block; font-size: 0.9rem; }
+.toast span { font-size: 0.78rem; color: var(--muted); }
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+.heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; }
+.heat i { width: 11px; height: 11px; border-radius: 3px; background: var(--card-2); }
+.matrix { border-collapse: collapse; font-family: var(--mono); font-size: 0.74rem; }
+.matrix td, .matrix th { border: 1px solid var(--line-solid); padding: 4px 6px; text-align: center; min-width: 30px; }
+.matrix td.hit { background: #34d39926; }
+.matrix td.miss { color: var(--bad); font-weight: 700; }
+
+/* ---------- animations ---------- */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+@keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes stepIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(18px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(-10px); } }
+@keyframes pulse { 50% { opacity: 0.45; } }
+@keyframes sectionFlash {
+  0% { box-shadow: inset 0 0 0 1px hsl(var(--tint)), 0 0 0 0 hsl(var(--tint) / 0.55); }
+  100% { box-shadow: inset 0 0 0 1px hsl(var(--tint)), 0 0 0 14px hsl(var(--tint) / 0); }
+}
+@keyframes flipIn { from { transform: rotateX(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheen { from { background-position: -160% 0; } to { background-position: 260% 0; } }
+.flip { animation: flipIn 480ms cubic-bezier(.2,.9,.2,1); }
+.sheen {
+  background-image: linear-gradient(100deg, transparent 35%, #ffffff2e 50%, transparent 65%);
+  background-size: 220% 100%; animation: sheen 900ms ease;
+}
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after {
+  animation: none !important; transition: none !important;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  #app { grid-template-columns: 210px minmax(0, 1fr); grid-template-areas: "top top" "nav main" "side side"; }
+}
+@media (max-width: 820px) {
+  :root { --gap: 10px; }
+  #app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "nav" "main" "side"; padding: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  #stepNav { flex-direction: row; overflow-x: auto; scroll-snap-type: x mandatory; padding: 8px; gap: 6px; }
+  #stepNav .navhead { display: none; }
+  .step { width: auto; flex: none; scroll-snap-align: start; padding: 6px 10px; }
+  .step .lbl span, .step .ring { display: none; }
+  .card { padding: 14px; }
+  .pad { position: sticky; bottom: 0; z-index: 5; padding-top: 8px; background: linear-gradient(180deg, transparent, var(--card) 22%); }
+  .pad.weekday, .pad.digit7 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pad.number { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .key { min-height: var(--tap); }
+  .brand span { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top panel">
+    <div class="brand"><i class="dot"></i><b>Doomsday Trainer</b><span class="muted">train yourself to name the weekday of any date, in your head</span></div>
+
+    <div class="seg" id="modeSeg" role="group" aria-label="Play mode">
+      <button type="button" data-mode="practice" aria-pressed="true">Practice</button>
+      <button type="button" data-mode="sprint" aria-pressed="false">Sprint</button>
+      <button type="button" data-mode="survival" aria-pressed="false">Survival</button>
+    </div>
+
+    <label class="ctl" title="Year range the drills draw from">
+      <span class="muted" style="font-size:.72rem">Range</span>
+      <select id="difficultySel" style="background:transparent;border:0"></select>
+    </label>
+
+    <button type="button" class="iconbtn" id="statsBtn" title="Statistics (t)">📊<span>Stats</span></button>
+    <button type="button" class="iconbtn" id="settingsBtn" title="Settings">⚙️</button>
+    <button type="button" class="iconbtn" id="helpBtn" title="Keyboard shortcuts (?)">⌨️</button>
+    <button type="button" class="iconbtn" id="aboutBtn" title="About the algorithm">ℹ️</button>
+
+    <div class="xpwrap">
+      <span class="lvl" id="lvlLabel">LV 1</span>
+      <span class="xpbar"><i id="xpFill"></i></span>
+      <span class="lvl mono" id="xpLabel">0 XP</span>
+    </div>
+  </header>
+
+  <nav class="panel" id="stepNav" aria-label="Algorithm steps"></nav>
+
+  <div class="main">
+    <div class="banner hidden" id="banner" role="alert"></div>
+
+    <section class="panel card" id="drillCard" aria-live="polite">
+      <div class="kicker" id="kicker"></div>
+      <div class="modeline" id="modeline"></div>
+      <div id="howto"></div>
+      <div class="prompt" id="prompt"></div>
+      <div class="pad" id="pad"></div>
+      <div class="verdict" id="verdict"></div>
+      <div class="actions" id="actions"></div>
+      <div class="work" id="work"></div>
+    </section>
+
+    <section class="learn hidden" id="learnPanel"></section>
+  </div>
+
+  <aside class="side">
+    <div class="panel" id="sessionPanel"></div>
+    <div class="panel" id="rhythmPanel"></div>
+    <div class="panel" id="achPanel"></div>
+  </aside>
+</div>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<dialog id="helpDlg"><form method="dialog" class="dlg">
+  <div class="dlghead"><h2>How to play</h2><button class="btn" value="close">Close</button></div>
+  <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Modes</h3>
+  <table class="cheat" id="modeHelp"></table>
+  <h3 style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Keyboard</h3>
+  <table class="cheat">
+    <tr><td class="mono">0 – 6</td><td>Pick weekday (0 = Sunday) or offset</td></tr>
+    <tr><td class="mono">digits</td><td>Type a day-of-month answer, <span class="mono">Enter</span> to submit, <span class="mono">Backspace</span> to erase</td></tr>
+    <tr><td class="mono">Y / N</td><td>Answer a leap-year question</td></tr>
+    <tr><td class="mono">Enter</td><td>Next question (or submit a typed number)</td></tr>
+    <tr><td class="mono">[ / ]</td><td>Previous / next step</td></tr>
+    <tr><td class="mono">Alt + 0 – 7</td><td>Jump straight to a step (0 = Learn)</td></tr>
+    <tr><td class="mono">S</td><td>Skip this question</td></tr>
+    <tr><td class="mono">H</td><td>Show the worked solution (counts as a miss)</td></tr>
+    <tr><td class="mono">E</td><td>Show a fully worked example (never counts)</td></tr>
+    <tr><td class="mono">M</td><td>Cycle play mode</td></tr>
+    <tr><td class="mono">T</td><td>Statistics</td></tr>
+    <tr><td class="mono">?</td><td>This help</td></tr>
+    <tr><td class="mono">Esc</td><td>Close dialogs</td></tr>
+  </table>
+</form></dialog>
+
+<dialog id="settingsDlg"><form method="dialog" class="dlg">
+  <div class="dlghead"><h2>Settings</h2><button class="btn" value="close">Close</button></div>
+
+  <div class="row">
+    <label for="methodSel">Year-offset method<br><span class="muted" style="font-size:.78rem">Drives drills and every worked solution</span></label>
+    <select class="ctl" id="methodSel">
+      <option value="odd11">odd + 11</option>
+      <option value="classic">dozens / remainder / quarters</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label for="rangeMin">Custom year range<br><span class="muted" style="font-size:.78rem">Applies when Range is set to Custom</span></label>
+    <span class="dateform">
+      <input class="mono" id="rangeMin" type="number" inputmode="numeric" min="1583" max="2999">
+      <span class="muted">to</span>
+      <input class="mono" id="rangeMax" type="number" inputmode="numeric" min="1583" max="2999">
+    </span>
+  </div>
+
+  <div class="row">
+    <label for="sprintSel">Sprint length<br><span class="muted" style="font-size:.78rem">How long a sprint runs. Best scores are kept separately for each length.</span></label>
+    <select class="ctl" id="sprintSel">
+      <option value="30">30 seconds</option>
+      <option value="60">60 seconds</option>
+      <option value="120">2 minutes</option>
+      <option value="300">5 minutes</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label for="motionSel">Motion<br><span class="muted" style="font-size:.78rem">Celebration effects when you get one right: confetti, stars, sparks, fireworks. <b>Off</b> stops every animation and transition on the page.</span></label>
+    <select class="ctl" id="motionSel">
+      <option value="full">On — celebrate every correct answer</option>
+      <option value="off">Off — no animation at all</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label for="themeSel">Theme</label>
+    <select class="ctl" id="themeSel">
+      <option value="auto">Auto</option>
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <label for="soundChk">Sound effects<br><span class="muted" style="font-size:.78rem">A short tone on each answer, right or wrong.</span></label>
+    <input id="soundChk" type="checkbox" style="width:22px;height:22px">
+  </div>
+
+  <div class="row">
+    <label>Stored data<br><span class="muted" style="font-size:.78rem">History, statistics and achievements live in this browser only</span></label>
+    <span style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn" id="exportBtn">Export JSON</button>
+      <button type="button" class="btn" id="wipeBtn">Erase everything</button>
+    </span>
+  </div>
+</form></dialog>
+
+<dialog id="statsDlg"><div class="dlg" id="statsBody"></div></dialog>
+
+<script type="module">
+"use strict";
+
+/* Pure, DOM-free, single source of truth for every drill, every worked solution
+ * and the self-test. `make test` extracts everything between the two markers
+ * below and runs it under node, so this region must stay self-contained. */
+/* CORE MATH START */
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+const DAYS_IN_MONTH_COMMON = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+/* Anchor weekday of the century, indexed by floor(year / 100) % 4:
+ * 1600 → Tuesday, 1700 → Sunday, 1800 → Friday, 1900 → Wednesday, then repeats. */
+const CENTURY_ANCHOR_CYCLE = [2, 0, 5, 3];
+
+/* Conway's doomsday date per month, for a common year. Both February and March
+ * name the same day: the last day of February, a.k.a. "March 0". */
+const MONTH_DOOMSDAY_COMMON = [3, 28, 0, 4, 9, 6, 11, 8, 5, 10, 7, 12];
+const JANUARY_DOOMSDAY_LEAP = 4;
+const FEBRUARY_DOOMSDAY_LEAP = 29;
+
+/* The Gregorian calendar starts 1582-10-15; 1583 is its first complete year. */
+const MIN_YEAR = 1583;
+const MAX_YEAR = 2999;
+const DAYS_PER_WEEK = 7;
+const ODD11_ADDEND = 11;
+const CLASSIC_DOZEN = 12;
+const CLASSIC_QUARTER = 4;
+
+const OFFSET_METHODS = {
+  odd11: { id: "odd11", label: "odd + 11" },
+  classic: { id: "classic", label: "dozens / remainder / quarters" },
+};
+
+function fail(message, values) {
+  throw new Error(message + " " + JSON.stringify(values));
+}
+
+function assertInt(name, value, lo, hi) {
+  if (!Number.isInteger(value) || value < lo || value > hi)
+    fail("Expected integer " + name + " within [" + lo + ", " + hi + "], got:", { [name]: value });
+  return value;
+}
+
+function mod7(n) {
+  if (!Number.isInteger(n)) fail("mod7 expects an integer, got:", { n: n });
+  return ((n % DAYS_PER_WEEK) + DAYS_PER_WEEK) % DAYS_PER_WEEK;
+}
+
+function dayName(day) {
+  return DAY_NAMES[assertInt("day", day, 0, 6)];
+}
+
+function isLeapYear(year) {
+  assertInt("year", year, MIN_YEAR, MAX_YEAR);
+  if (year % 4 !== 0) return false;
+  if (year % 100 !== 0) return true;
+  return year % 400 === 0;
+}
+
+function daysInMonth(month, leap) {
+  assertInt("month", month, 1, 12);
+  if (typeof leap !== "boolean") fail("daysInMonth expects a boolean leap flag, got:", { month: month, leap: leap });
+  return month === 2 && leap ? 29 : DAYS_IN_MONTH_COMMON[month - 1];
+}
+
+function centuryStartOf(year) {
+  assertInt("year", year, MIN_YEAR, MAX_YEAR);
+  return Math.floor(year / 100) * 100;
+}
+
+function centuryAnchor(year) {
+  assertInt("year", year, MIN_YEAR, MAX_YEAR);
+  return CENTURY_ANCHOR_CYCLE[Math.floor(year / 100) % CENTURY_ANCHOR_CYCLE.length];
+}
+
+/* Both offset functions return the shift (0..6) from the century anchor to the
+ * year's doomsday, plus every intermediate value the explanations render. */
+function yearOffsetOdd11(twoDigitYear) {
+  assertInt("twoDigitYear", twoDigitYear, 0, 99);
+  const firstOdd = twoDigitYear % 2 === 1;
+  const afterFirst = firstOdd ? twoDigitYear + ODD11_ADDEND : twoDigitYear;
+  const halved = afterFirst / 2;
+  const secondOdd = halved % 2 === 1;
+  const afterSecond = secondOdd ? halved + ODD11_ADDEND : halved;
+  const remainder = afterSecond % DAYS_PER_WEEK;
+  return {
+    method: "odd11",
+    twoDigitYear: twoDigitYear,
+    firstOdd: firstOdd,
+    afterFirst: afterFirst,
+    halved: halved,
+    secondOdd: secondOdd,
+    afterSecond: afterSecond,
+    remainder: remainder,
+    value: mod7(DAYS_PER_WEEK - remainder),
+  };
+}
+
+function yearOffsetClassic(twoDigitYear) {
+  assertInt("twoDigitYear", twoDigitYear, 0, 99);
+  const dozens = Math.floor(twoDigitYear / CLASSIC_DOZEN);
+  const remainder = twoDigitYear % CLASSIC_DOZEN;
+  const quarters = Math.floor(remainder / CLASSIC_QUARTER);
+  const sum = dozens + remainder + quarters;
+  return {
+    method: "classic",
+    twoDigitYear: twoDigitYear,
+    dozens: dozens,
+    remainder: remainder,
+    quarters: quarters,
+    sum: sum,
+    value: mod7(sum),
+  };
+}
+
+function yearOffset(twoDigitYear, method) {
+  switch (method) {
+    case "odd11": return yearOffsetOdd11(twoDigitYear);
+    case "classic": return yearOffsetClassic(twoDigitYear);
+    default:
+      return fail("Unknown year-offset method; expected one of " + JSON.stringify(Object.keys(OFFSET_METHODS)) + ", got:",
+        { method: method, twoDigitYear: twoDigitYear });
+  }
+}
+
+function yearDoomsday(year, method) {
+  return mod7(centuryAnchor(year) + yearOffset(year % 100, method).value);
+}
+
+/* Every date in the month congruent to the canonical doomsday (mod 7) is itself
+ * a doomsday, so the drill accepts any of them. */
+function monthDoomsday(month, leap) {
+  assertInt("month", month, 1, 12);
+  if (typeof leap !== "boolean") fail("monthDoomsday expects a boolean leap flag, got:", { month: month, leap: leap });
+  let canonical = MONTH_DOOMSDAY_COMMON[month - 1];
+  if (month === 1 && leap) canonical = JANUARY_DOOMSDAY_LEAP;
+  if (month === 2 && leap) canonical = FEBRUARY_DOOMSDAY_LEAP;
+  const last = daysInMonth(month, leap);
+  const alternates = [];
+  for (let d = 1; d <= last; d++)
+    if (d !== canonical && mod7(d) === mod7(canonical)) alternates.push(d);
+  return { month: month, leap: leap, canonical: canonical, alternates: alternates, lastDay: last };
+}
+
+function isAcceptedMonthDoomsday(month, leap, given) {
+  const md = monthDoomsday(month, leap);
+  if (given === md.canonical) return true;
+  return md.alternates.indexOf(given) !== -1;
+}
+
+function dayOfWeekFor(year, month, day) {
+  assertInt("day", day, 1, daysInMonth(month, isLeapYear(year)));
+  const doomsday = yearDoomsday(year, "odd11");
+  return mod7(doomsday + (day - monthDoomsday(month, isLeapYear(year)).canonical));
+}
+
+/* Structured derivation consumed by the solution renderer, the per-step
+ * examples and the learn walkthrough — the only place the chain is spelled out. */
+function explainDate(year, month, day, method) {
+  assertInt("year", year, MIN_YEAR, MAX_YEAR);
+  assertInt("month", month, 1, 12);
+  const leap = isLeapYear(year);
+  assertInt("day", day, 1, daysInMonth(month, leap));
+  const anchor = centuryAnchor(year);
+  const offset = yearOffset(year % 100, method);
+  const doomsday = mod7(anchor + offset.value);
+  const md = monthDoomsday(month, leap);
+  const delta = day - md.canonical;
+  const weekday = mod7(doomsday + delta);
+  return {
+    year: year, month: month, day: day, method: method,
+    twoDigitYear: year % 100,
+    centuryStart: centuryStartOf(year),
+    leap: leap,
+    leapReason: leapReasonOf(year),
+    anchor: { value: anchor, name: DAY_NAMES[anchor] },
+    offset: offset,
+    doomsday: { value: doomsday, name: DAY_NAMES[doomsday] },
+    monthDoomsday: md,
+    delta: { raw: delta, mod7: mod7(delta) },
+    weekday: { value: weekday, name: DAY_NAMES[weekday] },
+  };
+}
+
+function leapReasonOf(year) {
+  if (year % 4 !== 0) return year + " is not divisible by 4";
+  if (year % 100 !== 0) return year + " is divisible by 4 and is not a century year";
+  if (year % 400 !== 0) return year + " is a century year but is not divisible by 400";
+  return year + " is a century year divisible by 400";
+}
+
+/* Independent reference used only by the self-test. */
+function referenceDayOfWeek(year, month, day) {
+  const utc = new Date(Date.UTC(2000, month - 1, day));
+  utc.setUTCFullYear(year);
+  return utc.getUTCDay();
+}
+
+function runSelfTest(fromYear, toYear) {
+  const failures = [];
+  let checked = 0;
+  for (let y = fromYear; y <= toYear; y++) {
+    const leap = isLeapYear(y);
+    const februaryLength = new Date(Date.UTC(y, 2, 0)).getUTCDate();
+    if (leap !== (februaryLength === 29))
+      failures.push({ kind: "leap", year: y, computed: leap, februaryLength: februaryLength });
+    for (let m = 1; m <= 12; m++) {
+      const last = daysInMonth(m, leap);
+      if (last !== new Date(Date.UTC(y, m, 0)).getUTCDate())
+        failures.push({ kind: "daysInMonth", year: y, month: m, computed: last });
+      for (let d = 1; d <= last; d++) {
+        checked++;
+        const expected = referenceDayOfWeek(y, m, d);
+        if (dayOfWeekFor(y, m, d) !== expected)
+          failures.push({ kind: "dayOfWeek", year: y, month: m, day: d, computed: dayOfWeekFor(y, m, d), expected: expected });
+        for (const method of Object.keys(OFFSET_METHODS)) {
+          const ex = explainDate(y, m, d, method);
+          if (ex.weekday.value !== expected)
+            failures.push({ kind: "explain", method: method, year: y, month: m, day: d, computed: ex.weekday.value, expected: expected });
+        }
+        if (failures.length > 5) return { checked: checked, failures: failures };
+      }
+    }
+  }
+  return { checked: checked, failures: failures };
+}
+
+/* CORE MATH END */
+
+/* ============================ app constants ============================== */
+
+const DIFFICULTIES = [
+  { id: "easy", label: "Easy · 2000–2099", min: 2000, max: 2099 },
+  { id: "normal", label: "Normal · 1900–2099", min: 1900, max: 2099 },
+  { id: "hard", label: "Hard · 1800–2199", min: 1800, max: 2199 },
+  { id: "extreme", label: "Extreme · 1583–2999", min: MIN_YEAR, max: MAX_YEAR },
+  { id: "custom", label: "Custom range", min: null, max: null },
+];
+const MODES = ["practice", "sprint", "survival"];
+const MODE_INFO = {
+  practice: { emoji: "🎯", label: "Practice", blurb: "Untimed. A miss just shows you the working — nothing ends the session." },
+  sprint: { emoji: "⏱️", label: "Sprint", blurb: "Answer as many as you can before the clock runs out." },
+  survival: { emoji: "🛡️", label: "Survival", blurb: "One wrong answer ends the run. How far can you get?" },
+};
+
+/* The procedure for each year-offset method, written once and shown both in the
+ * step's own instructions and in the Learn panel's comparison. */
+const METHOD_PROCEDURE = {
+  odd11: [
+    "Take the last two digits of the year.",
+    "If it is odd, add 11.",
+    "Halve it.",
+    "If that is odd, add 11.",
+    "Take the result mod 7.",
+    "Count back from 7 — a remainder of 0 means an offset of 0.",
+  ],
+  classic: [
+    "Take the last two digits of the year.",
+    "How many whole dozens does it hold, and what is left over?",
+    "Take a quarter of the leftover, rounded down.",
+    "Add those three numbers.",
+    "Take the sum mod 7.",
+  ],
+};
+
+const METHOD_TRADEOFFS = {
+  odd11: [
+    "One running number the whole way — nothing to hold on the side.",
+    "No division with remainder, only halving.",
+    "Four conditional steps, so it is easy to lose your place.",
+  ],
+  classic: [
+    "Fewer steps, and each one is easy to re-check.",
+    "Needs a division and three numbers held at once.",
+    "The classic form Conway taught.",
+  ],
+};
+const MOTIONS = ["full", "off"];
+/* Removed choice: it followed the system's reduced-motion preference and left
+ * the page looking inert. Anything stored under it becomes "full". */
+const LEGACY_MOTION_AUTO = "auto";
+const LEGACY_SETTINGS = { motionAsked: true };
+const THEMES = ["auto", "dark", "light"];
+const SPRINT_SECONDS_CHOICES = [30, 60, 120, 300];
+
+const STORAGE_KEYS = {
+  settings: "doomsday.settings.v1",
+  history: "doomsday.history.v1",
+  progress: "doomsday.progress.v1",
+  achievements: "doomsday.achievements.v1",
+};
+const HISTORY_LIMIT = 5000;
+const RECENT_WINDOW = 40;
+
+const XP_PER_CORRECT = 10;
+const XP_SPEED_BONUS_MAX = 8;
+const XP_SPEED_BONUS_MS = 6000;
+const XP_STREAK_BONUS_EVERY = 5;
+const XP_STREAK_BONUS = 5;
+const LEVEL_STEP_XP = 220;
+const MASTERY_WINDOW = 20;
+
+const ADVANCE_DELAY_MS = 950;
+const TOAST_LIFETIME_MS = 4200;
+const SPRINT_WARN_SECONDS = 10;
+
+const DEFAULT_SETTINGS = {
+  method: "odd11",
+  difficulty: "normal",
+  customMin: 1900,
+  customMax: 2099,
+  sprintSeconds: 60,
+  showHowTo: true,
+  motion: "full",
+  theme: "auto",
+  sound: false,
+};
+
+/* ================================ RNG ==================================== */
+
+function hashString(text) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function next() {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function newSeed() {
+  return Math.floor(Math.random() * 0xffffffff).toString(36);
+}
+
+function pick(rng, list) {
+  if (!Array.isArray(list) || list.length === 0) fail("pick expects a non-empty array, got:", { list: list });
+  return list[Math.floor(rng() * list.length)];
+}
+
+function randomInt(rng, lo, hi) {
+  return lo + Math.floor(rng() * (hi - lo + 1));
+}
+
+/* ============================== storage ================================== */
+
+const banner = document.getElementById("banner");
+
+function showBanner(html) {
+  banner.innerHTML = html;
+  banner.classList.remove("hidden");
+}
+
+function esc(text) {
+  return String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+/* A stored blob we cannot understand is reported, never silently discarded:
+ * the user decides whether to reset that one key. */
+function loadStored(key, validate, fallback) {
+  let raw = null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch (err) {
+    showBanner("<b>localStorage is unavailable</b> — progress will not be saved this session. " + esc(err.message));
+    return fallback();
+  }
+  if (raw === null) return fallback();
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    reportBadStore(key, raw, "not valid JSON: " + err.message);
+    return fallback();
+  }
+  const problem = validate(parsed);
+  if (problem !== null) {
+    reportBadStore(key, raw, problem);
+    return fallback();
+  }
+  return parsed;
+}
+
+function reportBadStore(key, raw, problem) {
+  showBanner(
+    "<b>Stored data in <span class='mono'>" + esc(key) + "</span> could not be used:</b> " + esc(problem) +
+    "<br>Running with defaults; nothing has been deleted." +
+    "<pre class='mono'>" + esc(raw.length > 1200 ? raw.slice(0, 1200) + " …" : raw) + "</pre>" +
+    "<button class='btn' data-reset-key='" + esc(key) + "'>Erase " + esc(key) + "</button>"
+  );
+}
+
+function saveStored(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    showBanner("<b>Could not save to <span class='mono'>" + esc(key) + "</span>:</b> " + esc(err.message));
+  }
+}
+
+function validateSettings(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return "expected an object";
+  for (const [k, v] of Object.entries(value))
+    if (!(k in DEFAULT_SETTINGS) && !(k in LEGACY_SETTINGS))
+      return "unknown setting " + JSON.stringify(k) + " = " + JSON.stringify(v);
+  if (value.method !== undefined && !(value.method in OFFSET_METHODS)) return "unknown method " + JSON.stringify(value.method);
+  if (value.difficulty !== undefined && !DIFFICULTIES.some((d) => d.id === value.difficulty))
+    return "unknown difficulty " + JSON.stringify(value.difficulty);
+  if (value.motion !== undefined && MOTIONS.indexOf(value.motion) === -1 && value.motion !== LEGACY_MOTION_AUTO)
+    return "unknown motion " + JSON.stringify(value.motion);
+  if (value.theme !== undefined && THEMES.indexOf(value.theme) === -1) return "unknown theme " + JSON.stringify(value.theme);
+  return null;
+}
+
+let settingsMigrated = false;
+
+function migrateSettings(stored) {
+  if (stored.motion === LEGACY_MOTION_AUTO) {
+    stored.motion = "full";
+    settingsMigrated = true;
+  }
+  for (const key of Object.keys(LEGACY_SETTINGS))
+    if (key in stored) {
+      delete stored[key];
+      settingsMigrated = true;
+    }
+  return stored;
+}
+
+function validateHistory(value) {
+  if (!Array.isArray(value)) return "expected an array of attempts";
+  for (let i = 0; i < value.length; i++) {
+    const a = value[i];
+    if (a === null || typeof a !== "object") return "attempt " + i + " is not an object";
+    if (typeof a.t !== "number" || typeof a.m !== "string" || typeof a.ok !== "boolean")
+      return "attempt " + i + " is missing t/m/ok: " + JSON.stringify(a);
+  }
+  return null;
+}
+
+function validateProgress(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return "expected an object";
+  for (const k of ["xp", "attempts", "correct", "bestStreak"])
+    if (typeof value[k] !== "number") return "field " + JSON.stringify(k) + " must be a number, got " + JSON.stringify(value[k]);
+  for (const k of ["byModule", "days", "bestSprint", "bestSurvival"])
+    if (value[k] === null || typeof value[k] !== "object") return "field " + JSON.stringify(k) + " must be an object";
+  return null;
+}
+
+function validateAchievements(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return "expected an object of id → timestamp";
+  for (const [k, v] of Object.entries(value))
+    if (typeof v !== "number") return "achievement " + JSON.stringify(k) + " should map to a timestamp, got " + JSON.stringify(v);
+  return null;
+}
+
+function emptyProgress() {
+  return { xp: 0, attempts: 0, correct: 0, bestStreak: 0, byModule: {}, days: {}, bestSprint: {}, bestSurvival: {} };
+}
+
+const settings = Object.assign({}, DEFAULT_SETTINGS,
+  migrateSettings(loadStored(STORAGE_KEYS.settings, validateSettings, () => ({}))));
+let history = loadStored(STORAGE_KEYS.history, validateHistory, () => []);
+const progress = Object.assign(emptyProgress(),
+  loadStored(STORAGE_KEYS.progress, validateProgress, emptyProgress));
+const unlocked = loadStored(STORAGE_KEYS.achievements, validateAchievements, () => ({}));
+
+function persistSettings() { saveStored(STORAGE_KEYS.settings, settings); }
+if (settingsMigrated) persistSettings();
+function persistHistory() { saveStored(STORAGE_KEYS.history, history); }
+function persistProgress() { saveStored(STORAGE_KEYS.progress, progress); }
+function persistAchievements() { saveStored(STORAGE_KEYS.achievements, unlocked); }
+
+/* =============================== state =================================== */
+
+const state = {
+  seed: newSeed(),
+  /* the front door, never the hardest step — a link in the URL overrides this */
+  module: "learn",
+  mode: "practice",
+  index: 0,
+};
+
+function rangeOf() {
+  const preset = DIFFICULTIES.find((d) => d.id === settings.difficulty);
+  if (preset === undefined) fail("Unknown difficulty in settings:", { difficulty: settings.difficulty });
+  if (preset.id !== "custom") return { min: preset.min, max: preset.max, label: preset.label };
+  const min = Math.min(settings.customMin, settings.customMax);
+  const max = Math.max(settings.customMin, settings.customMax);
+  return { min: min, max: max, label: "Custom · " + min + "–" + max };
+}
+
+function readHash() {
+  const raw = location.hash.replace(/^#/, "");
+  if (raw === "") return;
+  const params = new URLSearchParams(raw);
+  const problems = [];
+  const seen = { s: 1, m: 1, mode: 1, d: 1, meth: 1, n: 1, min: 1, max: 1 };
+  for (const key of params.keys()) if (!(key in seen)) problems.push("unknown link parameter " + JSON.stringify(key));
+
+  const seed = params.get("s");
+  if (seed !== null) {
+    if (!/^[0-9a-z]{1,12}$/.test(seed)) problems.push("bad seed " + JSON.stringify(seed));
+    else state.seed = seed;
+  }
+  const mod = params.get("m");
+  if (mod !== null) {
+    if (!MODULES.some((x) => x.id === mod)) problems.push("unknown step " + JSON.stringify(mod));
+    else state.module = mod;
+  }
+  const mode = params.get("mode");
+  if (mode !== null) {
+    if (MODES.indexOf(mode) === -1) problems.push("unknown mode " + JSON.stringify(mode));
+    else state.mode = mode;
+  }
+  const diff = params.get("d");
+  if (diff !== null) {
+    if (!DIFFICULTIES.some((x) => x.id === diff)) problems.push("unknown range " + JSON.stringify(diff));
+    else settings.difficulty = diff;
+  }
+  for (const [key, field] of [["min", "customMin"], ["max", "customMax"]]) {
+    const v = params.get(key);
+    if (v === null) continue;
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < MIN_YEAR || n > MAX_YEAR) problems.push("bad " + key + " year " + JSON.stringify(v));
+    else settings[field] = n;
+  }
+  const meth = params.get("meth");
+  if (meth !== null) {
+    if (!(meth in OFFSET_METHODS)) problems.push("unknown method " + JSON.stringify(meth));
+    else settings.method = meth;
+  }
+  const n = params.get("n");
+  if (n !== null) {
+    const parsed = Number(n);
+    if (!Number.isInteger(parsed) || parsed < 0) problems.push("bad question index " + JSON.stringify(n));
+    else state.index = parsed;
+  }
+  if (problems.length > 0)
+    showBanner("<b>This link had values I could not use:</b> " + esc(problems.join("; ")) +
+      "<br>The rest of the link was applied.");
+}
+
+function writeHash(push) {
+  const params = new URLSearchParams();
+  params.set("s", state.seed);
+  params.set("m", state.module);
+  params.set("mode", state.mode);
+  params.set("d", settings.difficulty);
+  params.set("meth", settings.method);
+  params.set("n", String(state.index));
+  if (settings.difficulty === "custom") {
+    params.set("min", String(settings.customMin));
+    params.set("max", String(settings.customMax));
+  }
+  const url = "#" + params.toString();
+  if (url === location.hash) return;
+  suppressHashChange = true;
+  if (push === true) history_pushState(url); else history_replaceState(url);
+  suppressHashChange = false;
+}
+
+let suppressHashChange = false;
+function history_pushState(url) { window.history.pushState(null, "", url); }
+function history_replaceState(url) { window.history.replaceState(null, "", url); }
+
+/* ===================== derivation (single renderer) ====================== */
+
+const MONTH_MNEMONICS = [
+  "3/3 in a common year, 4/4 in a leap year — “3 years in 4, 4 in the 4th”",
+  "The last day of February, always",
+  "“March 0” — the last day of February again (7/7, 14/14, 21/21 work too)",
+  "4/4 — even month, same-same",
+  "9/5 — “I work 9 to 5 at the 7-11”",
+  "6/6 — even month, same-same",
+  "7/11 — “I work 9 to 5 at the 7-11”",
+  "8/8 — even month, same-same",
+  "5/9 — “I work 9 to 5 at the 7-11”",
+  "10/10 — even month, same-same",
+  "11/7 — “I work 9 to 5 at the 7-11”",
+  "12/12 — even month, same-same",
+];
+
+const STEP_TITLES = {
+  leap: "Leap year?",
+  century: "Century anchor",
+  yearoffset: "Year offset",
+  yeardoomsday: "The year’s doomsday",
+  monthday: "The month’s doomsday date",
+  shift: "Shift to the target day",
+  full: "Answer",
+};
+
+function num(n) { return n < 0 ? "−" + Math.abs(n) : String(n); }
+
+/* The one place the algorithm is spelled out in words; every failure panel,
+ * every example and the learn walkthrough render from this. */
+function derivationSteps(ex) {
+  const steps = [];
+
+  /* every line settles the question or hands it to the next one */
+  const leapLines = [{
+    expr: ex.year + " ÷ 4 → remainder " + (ex.year % 4),
+    note: ex.year % 4 === 0 ? "so maybe" : "so no",
+  }];
+  if (ex.year % 4 === 0) leapLines.push({
+    expr: ex.year + " ÷ 100 → remainder " + (ex.year % 100),
+    note: ex.year % 100 === 0 ? "so maybe" : "so yes",
+  });
+  if (ex.year % 100 === 0) leapLines.push({
+    expr: ex.year + " ÷ 400 → remainder " + (ex.year % 400),
+    note: ex.year % 400 === 0 ? "so yes" : "so no",
+  });
+  steps.push({
+    id: "leap", lines: leapLines,
+    result: (ex.leap ? "Leap year" : "Common year") + " — " + ex.leapReason +
+      ", so February has " + daysInMonth(2, ex.leap) + " days",
+  });
+
+  steps.push({
+    id: "century",
+    lines: [
+      { expr: "⌊" + ex.year + " ÷ 100⌋ = " + Math.floor(ex.year / 100) + ",  " + Math.floor(ex.year / 100) + " mod 4 = " + (Math.floor(ex.year / 100) % 4),
+        note: "1600 Tue · 1700 Sun · 1800 Fri · 1900 Wed, then repeat" },
+    ],
+    result: "The " + ex.centuryStart + "s anchor is <b>" + ex.anchor.name + "</b> (" + ex.anchor.value + ")",
+  });
+
+  const o = ex.offset;
+  const offsetLines = [];
+  if (o.method === "odd11") {
+    offsetLines.push({ expr: pad2(o.twoDigitYear) + (o.firstOdd ? " is odd → " + o.twoDigitYear + " + 11 = " + o.afterFirst : " is even → keep " + o.afterFirst) });
+    offsetLines.push({ expr: o.afterFirst + " ÷ 2 = " + o.halved });
+    offsetLines.push({ expr: o.halved + (o.secondOdd ? " is odd → " + o.halved + " + 11 = " + o.afterSecond : " is even → keep " + o.afterSecond) });
+    offsetLines.push({ expr: o.afterSecond + " mod 7 = " + o.remainder });
+    offsetLines.push(o.remainder === 0
+      ? { expr: "remainder 0 → nothing to count back", note: "the year lands straight on the anchor" }
+      : { expr: "7 − " + o.remainder + " = " + o.value, note: "count back to the next multiple of 7" });
+  } else if (o.method === "classic") {
+    offsetLines.push({ expr: pad2(o.twoDigitYear) + " = 12 × " + o.dozens + " + " + o.remainder, note: "dozens, then what is left" });
+    offsetLines.push({ expr: "⌊" + o.remainder + " ÷ 4⌋ = " + o.quarters, note: "leap days inside the remainder" });
+    offsetLines.push({ expr: o.dozens + " + " + o.remainder + " + " + o.quarters + " = " + o.sum });
+    offsetLines.push({ expr: o.sum + " mod 7 = " + o.value });
+  } else {
+    fail("Unknown offset method in derivation:", { method: o.method });
+  }
+  steps.push({
+    id: "yearoffset", lines: offsetLines,
+    result: "Offset for ’" + pad2(o.twoDigitYear) + " is <b>" + o.value + "</b> day" + (o.value === 1 ? "" : "s") +
+      " past the anchor <span class='muted'>(" + OFFSET_METHODS[o.method].label + ")</span>",
+  });
+
+  steps.push({
+    id: "yeardoomsday",
+    lines: [
+      { expr: "anchor " + ex.anchor.value + " (" + DAY_ABBR[ex.anchor.value] + ") + offset " + o.value + " = " + (ex.anchor.value + o.value) },
+      { expr: (ex.anchor.value + o.value) + " mod 7 = " + ex.doomsday.value },
+    ],
+    result: "Every doomsday in " + ex.year + " falls on a <b>" + ex.doomsday.name + "</b>",
+  });
+
+  const md = ex.monthDoomsday;
+  steps.push({
+    id: "monthday",
+    lines: [
+      { expr: MONTH_NAMES[ex.month - 1] + (ex.month <= 2 ? (ex.leap ? " in a leap year" : " in a common year") : "") + " → " + md.canonical,
+        note: MONTH_MNEMONICS[ex.month - 1] },
+    ],
+    result: (ex.month === 3 ? "“March 0”, the last day of February," : MONTH_NAMES[ex.month - 1] + " " + md.canonical) +
+      " is a " + ex.doomsday.name +
+      (md.alternates.length > 0 ? " <span class='muted'>(so are " + md.alternates.join(", ") + ")</span>" : ""),
+  });
+
+  steps.push({
+    id: "shift",
+    lines: [
+      { expr: "day " + ex.day + " − doomsday date " + md.canonical + " = " + num(ex.delta.raw) },
+      { expr: num(ex.delta.raw) + " mod 7 = " + ex.delta.mod7 },
+    ],
+    result: ex.delta.mod7 === 0
+      ? "The " + ordinal(ex.day) + " is itself a doomsday — a " + ex.doomsday.name
+      : "The " + ordinal(ex.day) + " is <b>" + ex.delta.mod7 + "</b> day" + (ex.delta.mod7 === 1 ? "" : "s") + " after a " + ex.doomsday.name,
+  });
+
+  steps.push({
+    id: "full",
+    lines: [
+      { expr: ex.doomsday.name + " (" + ex.doomsday.value + ") + " + ex.delta.mod7 + " = " + (ex.doomsday.value + ex.delta.mod7) },
+      { expr: (ex.doomsday.value + ex.delta.mod7) + " mod 7 = " + ex.weekday.value },
+    ],
+    result: formatDate(ex) + " is a <b>" + ex.weekday.name + "</b>",
+  });
+
+  return steps;
+}
+
+function pad2(n) { return n < 10 ? "0" + n : String(n); }
+
+function ordinal(n) {
+  const rest = n % 100;
+  if (rest >= 11 && rest <= 13) return n + "th";
+  return n + ["th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"][n % 10];
+}
+
+function formatDate(ex) {
+  return ex.day + " " + MONTH_NAMES[ex.month - 1] + " " + ex.year;
+}
+
+function renderWorkLines(lines) {
+  return lines.map((l) =>
+    "<div class='wline'><span>" + l.expr + "</span>" +
+    (l.note === undefined ? "" : "<span class='note'>" + l.note + "</span>") + "</div>").join("");
+}
+
+/* options.focus: steps to highlight. options.only: render just these steps,
+ * keeping their original numbers, so a sub-step drill is not buried under the
+ * five steps it never asked about. options.notes: markup threaded into the
+ * chain in front of a given step. */
+function renderDerivation(ex, options) {
+  const opts = options === undefined ? {} : options;
+  const focus = opts.focus === undefined ? [] : opts.focus;
+  const notes = opts.notes === undefined ? {} : opts.notes;
+  const shown = derivationSteps(ex)
+    .map((step, i) => ({ step: step, number: i + 1 }))
+    .filter((entry) => opts.only === undefined || opts.only.indexOf(entry.step.id) !== -1);
+  if (shown.length === 0) fail("A derivation was asked to show no steps at all:", { only: opts.only });
+
+  const parts = shown.map((entry, i) => {
+    const cls = "wstep" + (focus.indexOf(entry.step.id) !== -1 ? " focus" : "");
+    const note = notes[entry.step.id] === undefined ? "" : notes[entry.step.id];
+    return note + "<div class='" + cls + "' style='animation-delay:" + Math.min(i * 55, 400) + "ms'>" +
+      "<h4><span class='n'>" + entry.number + "</span>" + STEP_TITLES[entry.step.id] + "</h4>" +
+      renderWorkLines(entry.step.lines) + "<div class='res'>" + entry.step.result + "</div></div>";
+  });
+  const hint = shown.length > 1 ? "<div class='chainhint'>↓ each step feeds the next</div>" : "";
+  return hint + "<div class='chain'>" + parts.join("") + "</div>";
+}
+
+/* ============================ module registry ============================ */
+
+const CENTURY_YEAR_BIAS = 0.25;
+
+function uniformDate(rng, range) {
+  const year = randomInt(rng, range.min, range.max);
+  const month = randomInt(rng, 1, 12);
+  return { year: year, month: month, day: randomInt(rng, 1, daysInMonth(month, isLeapYear(year))) };
+}
+
+/* Century years are the classic leap-year trap, so the leap drill sees more of
+ * them than uniform sampling would give. */
+function leapBiasedDate(rng, range) {
+  const base = uniformDate(rng, range);
+  if (rng() >= CENTURY_YEAR_BIAS) return base;
+  const lo = Math.ceil(range.min / 100), hi = Math.floor(range.max / 100);
+  if (hi < lo) return base;
+  const year = randomInt(rng, lo, hi) * 100;
+  if (year < MIN_YEAR || year > MAX_YEAR) return base;
+  return { year: year, month: base.month, day: Math.min(base.day, daysInMonth(base.month, isLeapYear(year))) };
+}
+
+const MODULES = [
+  {
+    id: "learn", kind: "panel", short: "Learn", title: "Learn & credits",
+    blurb: "The whole method, worked examples and who invented it",
+  },
+  {
+    id: "leap", kind: "drill", short: "Leap year", title: "Is it a leap year?",
+    blurb: "January and February move by a day in leap years",
+    answer: "yesno", focus: ["leap"], explains: () => ["leap"], sample: leapBiasedDate, weight: 0.6,
+    ask: (ex) => ({ ask: "Is this a leap year?", subject: String(ex.year), sub: "" }),
+    solution: (ex) => ({ value: ex.leap, label: ex.leap ? "Leap year" : "Common year" }),
+    accepts: (ex, given) => given === ex.leap,
+  },
+  {
+    id: "century", kind: "drill", short: "Century anchor", title: "Anchor day of the century",
+    blurb: "Tue · Sun · Fri · Wed, repeating every 400 years",
+    answer: "weekday", focus: ["century"], explains: () => ["century"], weight: 1,
+    ask: (ex) => ({ ask: "Which weekday anchors this century?", subject: ex.centuryStart + "s", sub: "the century holding " + ex.year }),
+    solution: (ex) => ({ value: ex.anchor.value, label: ex.anchor.name }),
+    accepts: (ex, given) => given === ex.anchor.value,
+  },
+  {
+    id: "yearoffset", kind: "drill", short: "Year offset", title: "Offset inside the century",
+    blurb: "How far the year's doomsday has drifted past the anchor",
+    answer: "digit7", focus: ["yearoffset"], explains: () => ["yearoffset"], weight: 1.4,
+    ask: (ex) => ({
+      ask: "How many days past the century anchor?",
+      subject: "’" + pad2(ex.twoDigitYear),
+      sub: "using " + OFFSET_METHODS[ex.method].label,
+      given: [["full year", ex.year]],
+    }),
+    solution: (ex) => ({ value: ex.offset.value, label: String(ex.offset.value) }),
+    accepts: (ex, given) => given === ex.offset.value,
+  },
+  {
+    id: "yeardoomsday", kind: "drill", short: "Year doomsday", title: "The year's doomsday",
+    blurb: "Century anchor plus the year offset",
+    answer: "weekday", focus: ["yeardoomsday"],
+    explains: () => ["century", "yearoffset", "yeardoomsday"], weight: 1.6,
+    ask: (ex) => ({ ask: "Which weekday is this year’s doomsday?", subject: String(ex.year), sub: "" }),
+    solution: (ex) => ({ value: ex.doomsday.value, label: ex.doomsday.name }),
+    accepts: (ex, given) => given === ex.doomsday.value,
+  },
+  {
+    id: "monthday", kind: "drill", short: "Month date", title: "The month's doomsday date",
+    blurb: "4/4, 6/6, 8/8, 10/10, 12/12 and the 9-5 / 7-11 pairs",
+    answer: "number", focus: ["monthday"],
+    explains: (ex) => (ex.month <= 2 ? ["leap", "monthday"] : ["monthday"]), weight: 1,
+    ask: (ex) => ({
+      ask: "Which date in this month is a doomsday?",
+      subject: MONTH_NAMES[ex.month - 1],
+      sub: ex.month <= 2 ? (ex.leap ? "in a leap year" : "in a common year") : "any year",
+    }),
+    solution: (ex) => ({
+      value: ex.monthDoomsday.canonical,
+      label: String(ex.monthDoomsday.canonical) +
+        (ex.monthDoomsday.alternates.length > 0 ? " (or " + ex.monthDoomsday.alternates.join(", ") + ")" : ""),
+    }),
+    accepts: (ex, given) => isAcceptedMonthDoomsday(ex.month, ex.leap, given),
+  },
+  {
+    id: "shift", kind: "drill", short: "Shift", title: "Shift from the doomsday",
+    blurb: "Count the days from the month's doomsday to the target date",
+    answer: "weekday", focus: ["shift", "full"], explains: () => ["shift", "full"], weight: 1.2,
+    ask: (ex) => ({
+      ask: "Which weekday is this date?",
+      subject: MONTH_NAMES[ex.month - 1] + " " + ex.day,
+      sub: "",
+      given: [["the year’s doomsday", ex.doomsday.name], ["this month’s doomsday date", ex.monthDoomsday.canonical]],
+    }),
+    solution: (ex) => ({ value: ex.weekday.value, label: ex.weekday.name }),
+    accepts: (ex, given) => given === ex.weekday.value,
+  },
+  {
+    id: "full", kind: "drill", short: "Full date", title: "The whole algorithm",
+    blurb: "A date in, a weekday out — nothing given",
+    answer: "weekday", focus: ["full"], weight: 2.4,
+    ask: (ex) => ({ ask: "Which weekday?", subject: formatDate(ex), sub: "" }),
+    solution: (ex) => ({ value: ex.weekday.value, label: ex.weekday.name }),
+    accepts: (ex, given) => given === ex.weekday.value,
+  },
+];
+
+const DRILLS = MODULES.filter((m) => m.kind === "drill");
+
+function factsLine(items) {
+  return "<div class='facts'>" + items.map((i) => "<span>" + i + "</span>").join("") + "</div>";
+}
+
+function orderedList(items) {
+  return "<ol>" + items.map((i) => "<li>" + i + "</li>").join("") + "</ol>";
+}
+
+/* What to do in this step, always one click away on the drill card. Everything
+ * factual is generated from the constants above, never retyped. */
+const HOWTOS = {
+  leap: () => "<p>A year divisible by 4 is a leap year — <strong>except</strong> century years, which need to be divisible by 400.</p>" +
+    factsLine(["1900 → no", "2000 → yes", "2024 → yes", "2100 → no"]) +
+    "<p class='muted'>Only January and February care: their doomsday dates move by one day.</p>",
+  century: () => "<p>Take ⌊year ÷ 100⌋ mod 4 and read off the anchor. The cycle repeats every 400 years.</p>" +
+    factsLine(CENTURY_ANCHOR_CYCLE.map((day, i) => (1600 + i * 100) + "s → " + DAY_ABBR[day])) +
+    "<p class='muted'>So the 2000s match the 1600s, the 2100s match the 1700s, and so on.</p>",
+  yearoffset: () => "<p>How far the year's doomsday has drifted past its century anchor, using <strong>" +
+    OFFSET_METHODS[settings.method].label + "</strong>:</p>" + orderedList(METHOD_PROCEDURE[settings.method]) +
+    "<p class='muted'>The other method gives the same number — switch in Settings or on the Learn page.</p>",
+  yeardoomsday: () => "<p>Two steps in one: <strong>(century anchor + year offset) mod 7</strong>.</p>" +
+    factsLine(CENTURY_ANCHOR_CYCLE.map((day, i) => (1600 + i * 100) + "s → " + DAY_ABBR[day])) +
+    "<p class='muted'>Every doomsday date in that year falls on this weekday.</p>",
+  monthday: () => "<p>Each month has a date that always lands on the year's doomsday.</p>" +
+    factsLine(MONTH_NAMES.map((name, i) => {
+      const common = monthDoomsday(i + 1, false).canonical;
+      const leap = monthDoomsday(i + 1, true).canonical;
+      return name.slice(0, 3) + " " + (common === leap ? common : common + " (" + leap + ")");
+    })) +
+    "<p class='muted'>Brackets are the leap-year value: only January and February shift. Even months are same-same (4/4, 6/6, 8/8, 10/10, 12/12); the odd ones pair up as “9 to 5 at the 7-11”; March 0 is February's last day.</p>",
+  shift: () => "<p>Subtract the month's doomsday date from the day you want, take it mod 7, and count that many weekdays forward from the doomsday.</p>" +
+    factsLine(["(day − month's doomsday date) mod 7"]) +
+    "<p class='muted'>A negative difference is fine — mod 7 still lands in 0…6.</p>",
+  full: () => "<p>The whole chain, in order:</p>" +
+    orderedList(DRILLS.filter((m) => m.id !== "full").map((m) => "<strong>" + m.short + "</strong> — " + m.blurb)) +
+    "<p class='muted'>Drill any one of them on its own from the list of steps.</p>",
+};
+
+const HOWTO_SUMMARY = {
+  leap: "Divisible by 4 — but century years need 400. Only January and February care.",
+  century: "⌊year ÷ 100⌋ mod 4 → Tue, Sun, Fri, Wed. The cycle repeats every 400 years.",
+  yearoffset: "How far the year's doomsday has drifted past that anchor, 0 to 6 days.",
+  yeardoomsday: "Anchor + offset, mod 7 — the weekday every doomsday date lands on this year.",
+  monthday: "The date in this month that is a doomsday: 4/4, 6/6, 9/5, 7/11, and so on.",
+  shift: "Day − that date, mod 7 — how far to count on from the doomsday weekday.",
+  full: "All six put together: a date in, a weekday out.",
+};
+
+function howtoFor(moduleId) {
+  const build = HOWTOS[moduleId];
+  if (build === undefined) fail("No instructions defined for module:", { id: moduleId, known: Object.keys(HOWTOS) });
+  return build();
+}
+
+/* Which steps a solution should print: the ones bearing on the question. A
+ * drill that declares nothing gets the whole chain, which is what the full-date
+ * step wants. */
+function explainedSteps(mod, ex) {
+  return mod.explains === undefined ? undefined : mod.explains(ex);
+}
+
+function moduleById(id) {
+  const found = MODULES.find((m) => m.id === id);
+  if (found === undefined) fail("Unknown module id:", { id: id, known: MODULES.map((m) => m.id) });
+  return found;
+}
+
+function questionFor(moduleId, index) {
+  const mod = moduleById(moduleId);
+  if (mod.kind !== "drill") fail("Cannot build a question for a non-drill module:", { id: moduleId, kind: mod.kind });
+  const range = rangeOf();
+  const rng = mulberry32(hashString([state.seed, moduleId, index, range.min, range.max, settings.method].join("|")));
+  const sample = (mod.sample === undefined ? uniformDate : mod.sample)(rng, range);
+  return explainDate(sample.year, sample.month, sample.day, settings.method);
+}
+
+/* Examples never touch the seeded question stream, so pressing E cannot change
+ * what the pending question is. */
+function exampleFor(moduleId) {
+  const mod = moduleById(moduleId);
+  const range = rangeOf();
+  const rng = mulberry32((Math.random() * 0xffffffff) >>> 0);
+  const sample = (mod.sample === undefined || mod.kind !== "drill" ? uniformDate : mod.sample)(rng, range);
+  return explainDate(sample.year, sample.month, sample.day, settings.method);
+}
+
+/* ============================== answer pads ============================== */
+
+function padSpec(answerType) {
+  switch (answerType) {
+    case "weekday":
+      return DAY_ABBR.map((abbr, i) => ({ value: i, label: abbr, hint: String(i) }));
+    case "digit7":
+      return [0, 1, 2, 3, 4, 5, 6].map((i) => ({ value: i, label: String(i), hint: "" }));
+    case "yesno":
+      return [{ value: true, label: "Leap year", hint: "Y" }, { value: false, label: "Common year", hint: "N" }];
+    case "number":
+      return Array.from({ length: 32 }, (_, i) => ({ value: i, label: String(i), hint: "" }));
+    default:
+      return fail("Unknown answer type:", { answerType: answerType });
+  }
+}
+
+function formatAnswer(answerType, value) {
+  switch (answerType) {
+    case "weekday": return DAY_NAMES[value];
+    case "digit7": return String(value);
+    case "yesno": return value ? "Leap year" : "Common year";
+    case "number": return String(value);
+    default: return fail("Unknown answer type:", { answerType: answerType, value: value });
+  }
+}
+
+/* =========================== derived statistics ========================== */
+
+let derivedCache = null;
+
+function invalidateDerived() { derivedCache = null; }
+
+function derived() {
+  if (derivedCache !== null) return derivedCache;
+  const byModule = {};
+  for (const m of DRILLS) byModule[m.id] = { attempts: 0, correct: 0, times: [], recent: [], hints: 0 };
+  const confusion = Array.from({ length: 7 }, () => new Array(7).fill(0));
+  const monthsCorrect = new Set();
+  const anchorsCorrect = new Set();
+  const weekdaysCorrect = new Set();
+  const centuriesCorrect = new Set();
+  const methodCorrect = { odd11: 0, classic: 0 };
+
+  for (const a of history) {
+    const bucket = byModule[a.m];
+    if (bucket === undefined) continue;
+    bucket.attempts++;
+    if (a.ok) bucket.correct++;
+    if (a.hint === true) bucket.hints++;
+    if (a.ok && typeof a.ms === "number") bucket.times.push(a.ms);
+    bucket.recent.push(a.ok);
+    if (bucket.recent.length > MASTERY_WINDOW) bucket.recent.shift();
+
+    if (a.type === "weekday" && Number.isInteger(a.exp)) {
+      if (Number.isInteger(a.given)) confusion[a.exp][a.given]++;
+      if (a.ok) weekdaysCorrect.add(a.exp);
+    }
+    if (!a.ok) continue;
+    if (a.m === "monthday" && Number.isInteger(a.mo)) monthsCorrect.add(a.mo);
+    if (a.m === "century" && Number.isInteger(a.y)) anchorsCorrect.add(Math.floor(a.y / 100) % 4);
+    if (a.m === "full" && Number.isInteger(a.y)) centuriesCorrect.add(Math.floor(a.y / 100));
+    if (a.m === "yearoffset" && (a.meth in methodCorrect)) methodCorrect[a.meth]++;
+  }
+
+  derivedCache = {
+    byModule: byModule,
+    confusion: confusion,
+    monthsCorrect: monthsCorrect,
+    anchorsCorrect: anchorsCorrect,
+    weekdaysCorrect: weekdaysCorrect,
+    centuriesCorrect: centuriesCorrect,
+    methodCorrect: methodCorrect,
+  };
+  return derivedCache;
+}
+
+function median(values) {
+  if (values.length === 0) return null;
+  const sorted = values.slice().sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+function accuracyOf(bucket) {
+  return bucket.attempts === 0 ? null : bucket.correct / bucket.attempts;
+}
+
+function masteryOf(moduleId) {
+  const recent = derived().byModule[moduleId].recent;
+  if (recent.length === 0) return 0;
+  return recent.filter(Boolean).length / recent.length;
+}
+
+function levelOf(xp) {
+  let level = 1;
+  let spent = 0;
+  while (spent + level * LEVEL_STEP_XP <= xp) {
+    spent += level * LEVEL_STEP_XP;
+    level++;
+  }
+  return { level: level, into: xp - spent, need: level * LEVEL_STEP_XP };
+}
+
+function xpFor(mod, ms, streak, usedHint) {
+  if (usedHint) return 0;
+  const speed = Math.max(0, Math.round(XP_SPEED_BONUS_MAX * (1 - ms / XP_SPEED_BONUS_MS)));
+  const streakBonus = streak > 0 && streak % XP_STREAK_BONUS_EVERY === 0 ? XP_STREAK_BONUS : 0;
+  return Math.round((XP_PER_CORRECT + speed) * mod.weight) + streakBonus;
+}
+
+function todayKey(at) {
+  const d = new Date(at);
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+
+/* ============================ practice rhythm ============================ */
+
+const MS_PER_DAY = 86400000;
+/* Epoch day 0 was a Thursday, so shifting by 3 puts week boundaries on Monday. */
+const WEEK_EPOCH_SHIFT = 3;
+const NUDGE_WEEK_URGENT_DAYS = 2;
+const NUDGE_MONTH_URGENT_DAYS = 5;
+const RETURN_AFTER_DAYS = 30;
+const NUDGE_LAPSED_DAYS = 10;
+
+function dayIndexFromParts(year, month, day) {
+  return Math.floor(Date.UTC(year, month - 1, day) / MS_PER_DAY);
+}
+
+function dayIndexOf(ms) {
+  const at = new Date(ms);
+  return dayIndexFromParts(at.getFullYear(), at.getMonth() + 1, at.getDate());
+}
+
+function dayKeyToIndex(key) {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+  if (parts === null) fail("Bad practice-day key in stored progress:", { key: key });
+  return dayIndexFromParts(Number(parts[1]), Number(parts[2]), Number(parts[3]));
+}
+
+function weekIndexOfDay(dayIndex) { return Math.floor((dayIndex + WEEK_EPOCH_SHIFT) / 7); }
+
+function monthIndexOfDay(dayIndex) {
+  const at = new Date(dayIndex * MS_PER_DAY);
+  return at.getUTCFullYear() * 12 + at.getUTCMonth();
+}
+
+function dateFromDayIndex(dayIndex) {
+  const at = new Date(dayIndex * MS_PER_DAY);
+  return new Date(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate());
+}
+
+/* Weeks start on Monday, so day 7w + 3 is the Sunday that closes week w. */
+function lastDayOfWeek(weekIndex) { return dateFromDayIndex(7 * weekIndex + 3); }
+
+function lastDayOfMonth(monthIndex) {
+  return new Date(Math.floor(monthIndex / 12), (monthIndex % 12) + 1, 0);
+}
+
+function daysLeftInMonth(ms) {
+  const at = new Date(ms);
+  return new Date(at.getFullYear(), at.getMonth() + 1, 0).getDate() - at.getDate();
+}
+
+/* Consecutive periods ending with the current one — or with the previous one,
+ * since the current period is not over yet and cannot have been missed. */
+function streakOf(indices, current) {
+  let at = indices.has(current) ? current : current - 1;
+  if (!indices.has(at)) return 0;
+  let count = 0;
+  while (indices.has(at)) { count++; at--; }
+  return count;
+}
+
+function longestStreakOf(indices) {
+  let best = 0, run = 0, previous = null;
+  for (const index of [...indices].sort((a, b) => a - b)) {
+    run = previous !== null && index === previous + 1 ? run + 1 : 1;
+    previous = index;
+    if (run > best) best = run;
+  }
+  return best;
+}
+
+function practiceRhythm() {
+  const days = Object.keys(progress.days).map(dayKeyToIndex);
+  const daySet = new Set(days);
+  const weekSet = new Set(days.map(weekIndexOfDay));
+  const monthSet = new Set(days.map(monthIndexOfDay));
+  const now = Date.now();
+  const today = dayIndexOf(now);
+  const thisWeek = weekIndexOfDay(today);
+  const thisMonth = monthIndexOfDay(today);
+  const lastDay = days.length === 0 ? null : Math.max(...days);
+  const earlier = days.filter((d) => d < today);
+  return {
+    totalDays: days.length,
+    lastAt: history.length > 0 ? history[history.length - 1].t : (lastDay === null ? null : lastDay * MS_PER_DAY),
+    daysSinceLast: lastDay === null ? null : today - lastDay,
+    gapBeforeToday: earlier.length === 0 ? null : today - Math.max(...earlier),
+    /* deadline: the last date on which practising still lengthens this streak —
+     * the next period when the current one is already done, otherwise this one. */
+    day: { streak: streakOf(daySet, today), longest: longestStreakOf(daySet), done: daySet.has(today),
+      daysLeft: 0, deadline: dateFromDayIndex(today + (daySet.has(today) ? 1 : 0)).getTime() },
+    week: { streak: streakOf(weekSet, thisWeek), longest: longestStreakOf(weekSet), done: weekSet.has(thisWeek),
+      daysLeft: 6 - ((today + WEEK_EPOCH_SHIFT) % 7),
+      deadline: lastDayOfWeek(thisWeek + (weekSet.has(thisWeek) ? 1 : 0)).getTime() },
+    month: { streak: streakOf(monthSet, thisMonth), longest: longestStreakOf(monthSet), done: monthSet.has(thisMonth),
+      daysLeft: daysLeftInMonth(now),
+      deadline: lastDayOfMonth(thisMonth + (monthSet.has(thisMonth) ? 1 : 0)).getTime() },
+  };
+}
+
+function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+
+/* "4-day", not "4 days", when the count qualifies a noun. */
+function compound(n, word) { return n + "-" + word; }
+
+/* The one thing worth saying about the long game right now. */
+function practiceNudge(rhythm) {
+  if (rhythm.totalDays === 0)
+    return { level: "info", text: "Answer one question to start a streak. Coming back tomorrow is worth more than a long session today." };
+  if (rhythm.day.streak >= 2 && !rhythm.day.done)
+    return { level: "warn", text: "One question today keeps your " + compound(rhythm.day.streak, "day") + " streak alive." };
+  if (rhythm.week.streak >= 2 && !rhythm.week.done)
+    return { level: rhythm.week.daysLeft <= NUDGE_WEEK_URGENT_DAYS ? "warn" : "info",
+      text: "Your " + compound(rhythm.week.streak, "week") + " streak needs a session this week — " +
+        plural(rhythm.week.daysLeft + 1, "day") + " left." };
+  if (rhythm.month.streak >= 2 && !rhythm.month.done)
+    return { level: rhythm.month.daysLeft <= NUDGE_MONTH_URGENT_DAYS ? "warn" : "info",
+      text: "Your " + compound(rhythm.month.streak, "month") + " streak needs a session this month — " +
+        plural(rhythm.month.daysLeft + 1, "day") + " left." };
+  if (rhythm.day.done)
+    return { level: "calm", text: "Practised today. " +
+      (rhythm.day.streak > 1 ? compound(rhythm.day.streak, "day") + " run going." : "Come back tomorrow to start a run.") };
+  if (rhythm.daysSinceLast !== null && rhythm.daysSinceLast >= NUDGE_LAPSED_DAYS)
+    return { level: "info", text: "Your last session was " + relativeTime(rhythm.lastAt) +
+      ". One question today starts a new run." };
+  return { level: "info", text: "Nothing at stake today — a couple of minutes still beats none." };
+}
+
+const DEADLINE_FORMAT = { weekday: "short", day: "numeric", month: "short" };
+/* A single period is not a run, so the tile shows the date that would make it
+ * one instead of claiming a streak of 1. */
+const STREAK_MINIMUM = 2;
+
+function formatDeadline(ms) { return new Date(ms).toLocaleDateString(undefined, DEADLINE_FORMAT); }
+
+function relativeTime(ms) {
+  const seconds = Math.max(0, Date.now() - ms) / 1000;
+  if (seconds < 90) return "just now";
+  const minutes = seconds / 60;
+  if (minutes < 60) return plural(Math.round(minutes), "minute") + " ago";
+  const hours = minutes / 60;
+  if (hours < 24) return plural(Math.round(hours), "hour") + " ago";
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 14) return plural(days, "day") + " ago";
+  if (days < 60) return plural(Math.round(days / 7), "week") + " ago";
+  if (days < 730) return plural(Math.round(days / 30), "month") + " ago";
+  return plural(Math.round(days / 365), "year") + " ago";
+}
+
+/* ============================= achievements ============================== */
+
+const ACHIEVEMENTS = [
+  { id: "first", emoji: "🌱", name: "First light", hint: "One correct answer",
+    test: (c) => c.progress.correct >= 1 },
+  { id: "c25", emoji: "🌿", name: "Taking root", hint: "25 correct answers",
+    test: (c) => c.progress.correct >= 25 },
+  { id: "c100", emoji: "💯", name: "Century club", hint: "100 correct answers",
+    test: (c) => c.progress.correct >= 100 },
+  { id: "c1000", emoji: "🏛️", name: "Millennium", hint: "1000 correct answers",
+    test: (c) => c.progress.correct >= 1000 },
+  { id: "s10", emoji: "🔥", name: "On fire", hint: "10 correct in a row",
+    test: (c) => c.session.streak >= 10 },
+  { id: "s25", emoji: "⚡", name: "Unbroken", hint: "25 correct in a row",
+    test: (c) => c.session.streak >= 25 },
+  { id: "s50", emoji: "🌟", name: "Machine", hint: "50 correct in a row",
+    test: (c) => c.session.streak >= 50 },
+  { id: "quick5", emoji: "⏱️", name: "Quickdraw", hint: "A full date in under 5 seconds",
+    test: (c) => c.event.kind === "answer" && c.event.module === "full" && c.event.ok && !c.event.hint && c.event.ms < 5000 },
+  { id: "quick3", emoji: "🚀", name: "Faster than thought", hint: "A full date in under 3 seconds",
+    test: (c) => c.event.kind === "answer" && c.event.module === "full" && c.event.ok && !c.event.hint && c.event.ms < 3000 },
+  { id: "leap25", emoji: "🐸", name: "Leap master", hint: "25 leap-year calls right",
+    test: (c) => c.derived.byModule.leap.correct >= 25 },
+  { id: "months", emoji: "🗓️", name: "Twelve doors", hint: "Every month's doomsday date, at least once",
+    test: (c) => c.derived.monthsCorrect.size >= 12 },
+  { id: "anchors", emoji: "⚓", name: "All four anchors", hint: "Every century anchor, at least once",
+    test: (c) => c.derived.anchorsCorrect.size >= 4 },
+  { id: "week", emoji: "🌈", name: "Seven for seven", hint: "Answer each of the seven weekdays correctly",
+    test: (c) => c.derived.weekdaysCorrect.size >= 7 },
+  { id: "sprint15", emoji: "🏃", name: "Sprinter", hint: "15 correct in one sprint",
+    test: (c) => c.event.kind === "sprintEnd" && c.event.score >= 15 },
+  { id: "sprint30", emoji: "🏅", name: "Record holder", hint: "30 correct in one sprint",
+    test: (c) => c.event.kind === "sprintEnd" && c.event.score >= 30 },
+  { id: "survive20", emoji: "🛡️", name: "Survivor", hint: "A 20-answer survival run",
+    test: (c) => c.event.kind === "survivalEnd" && c.event.run >= 20 },
+  { id: "comeback", emoji: "🎯", name: "Comeback", hint: "Answer correctly straight after three misses",
+    test: (c) => c.event.kind === "answer" && c.event.ok && c.session.missesBefore >= 3 },
+  { id: "days3", emoji: "📆", name: "Habit forming", hint: "Practise on three different days",
+    test: (c) => Object.keys(c.progress.days).length >= 3 },
+  { id: "days7", emoji: "🗓", name: "A week of practice", hint: "Practise on seven different days",
+    test: (c) => Object.keys(c.progress.days).length >= 7 },
+  { id: "d5", emoji: "🔁", name: "Five days running", hint: "Practise five days in a row",
+    test: (c) => c.rhythm.day.streak >= 5 },
+  { id: "d30", emoji: "🧗", name: "Thirty days running", hint: "Practise thirty days in a row",
+    test: (c) => c.rhythm.day.streak >= 30 },
+  { id: "w4", emoji: "📅", name: "Four weeks running", hint: "Practise in four consecutive weeks",
+    test: (c) => c.rhythm.week.streak >= 4 },
+  { id: "w12", emoji: "🌗", name: "A season of it", hint: "Practise in twelve consecutive weeks",
+    test: (c) => c.rhythm.week.streak >= 12 },
+  { id: "m3", emoji: "🏔️", name: "Three months running", hint: "Practise in three consecutive months",
+    test: (c) => c.rhythm.month.streak >= 3 },
+  { id: "m6", emoji: "🗿", name: "Half a year running", hint: "Practise in six consecutive months",
+    test: (c) => c.rhythm.month.streak >= 6 },
+  { id: "m12", emoji: "🎂", name: "A year of practice", hint: "Practise in twelve consecutive months",
+    test: (c) => c.rhythm.month.streak >= 12 },
+  { id: "returned", emoji: "🔙", name: "Back again", hint: "Come back after a month away",
+    test: (c) => c.event.kind === "answer" && c.rhythm.gapBeforeToday !== null && c.rhythm.gapBeforeToday >= RETURN_AFTER_DAYS },
+  { id: "explorer", emoji: "🧭", name: "Explorer", hint: "Try all seven steps",
+    test: (c) => DRILLS.every((m) => c.derived.byModule[m.id].attempts > 0) },
+  { id: "ambidextrous", emoji: "🤹", name: "Ambidextrous", hint: "10 correct offsets with each method",
+    test: (c) => c.derived.methodCorrect.odd11 >= 10 && c.derived.methodCorrect.classic >= 10 },
+  { id: "timetraveller", emoji: "🕰️", name: "Time traveller", hint: "Full dates right in four different centuries",
+    test: (c) => c.derived.centuriesCorrect.size >= 4 },
+  { id: "nightowl", emoji: "🦉", name: "Night owl", hint: "Practise between midnight and 4am",
+    test: (c) => c.event.kind === "answer" && new Date(c.event.at).getHours() < 4 },
+  { id: "scholar", emoji: "📖", name: "Scholar", hint: "Work out a date of your own on the Learn page",
+    test: (c) => c.event.kind === "walkthrough" },
+];
+
+function checkAchievements(event) {
+  const context = { progress: progress, derived: derived(), session: session, event: event, rhythm: practiceRhythm() };
+  let changed = false;
+  for (const a of ACHIEVEMENTS) {
+    if (a.id in unlocked) continue;
+    let passed = false;
+    try {
+      passed = a.test(context) === true;
+    } catch (err) {
+      fail("Achievement test threw for " + JSON.stringify(a.id) + ": " + err.message, { event: event });
+    }
+    if (!passed) continue;
+    unlocked[a.id] = Date.now();
+    changed = true;
+    toast(a.emoji, a.name, a.hint);
+    celebrate("achievement");
+  }
+  if (changed) {
+    persistAchievements();
+    renderSide();
+  }
+}
+
+/* ================================ session ================================ */
+
+const session = newSession();
+
+function newSession() {
+  return {
+    mode: state.mode,
+    module: state.module,
+    startedAt: Date.now(),
+    endsAt: null,
+    over: false,
+    answered: 0,
+    correct: 0,
+    wrong: 0,
+    streak: 0,
+    bestStreak: 0,
+    run: 0,
+    consecutiveMisses: 0,
+    missesBefore: 0,
+  };
+}
+
+function resetSession() {
+  Object.assign(session, newSession());
+  if (session.mode === "sprint") session.endsAt = Date.now() + settings.sprintSeconds * 1000;
+  stopTicker();
+  if (session.mode === "sprint") startTicker();
+}
+
+let tickerId = null;
+function startTicker() {
+  stopTicker();
+  tickerId = setInterval(() => {
+    if (session.mode !== "sprint" || session.over) return;
+    if (Date.now() >= session.endsAt) endSprint();
+    renderSide();
+  }, 250);
+}
+function stopTicker() {
+  if (tickerId !== null) clearInterval(tickerId);
+  tickerId = null;
+}
+
+function endSprint() {
+  session.over = true;
+  stopTicker();
+  const key = session.module + "|" + settings.difficulty + "|" + settings.sprintSeconds;
+  const best = progress.bestSprint[key];
+  const isRecord = session.correct > 0 && (best === undefined || session.correct > best);
+  if (isRecord) {
+    progress.bestSprint[key] = session.correct;
+    persistProgress();
+    celebrate("record");
+  }
+  checkAchievements({ kind: "sprintEnd", score: session.correct, record: isRecord });
+  renderDrill();
+  renderSide();
+}
+
+function endSurvival() {
+  session.over = true;
+  const key = session.module + "|" + settings.difficulty;
+  const best = progress.bestSurvival[key];
+  const isRecord = session.run > 0 && (best === undefined || session.run > best);
+  if (isRecord) {
+    progress.bestSurvival[key] = session.run;
+    persistProgress();
+    celebrate("record");
+  }
+  checkAchievements({ kind: "survivalEnd", run: session.run, record: isRecord });
+  renderDrill();
+  renderSide();
+}
+
+/* ============================= question engine =========================== */
+
+let current = null;
+let typed = "";
+let advanceTimer = null;
+
+function startQuestion() {
+  const mod = moduleById(state.module);
+  if (mod.kind !== "drill") { current = null; return; }
+  clearTimeout(advanceTimer);
+  typed = "";
+  current = {
+    mod: mod,
+    ex: questionFor(mod.id, state.index),
+    startedAt: performance.now(),
+    answered: false,
+    given: null,
+    ok: false,
+    hint: false,
+    showWork: false,
+    example: null,
+  };
+  renderDrill();
+}
+
+function nextQuestion() {
+  if (session.over) return;
+  state.index++;
+  writeHash(false);
+  startQuestion();
+}
+
+function recordAttempt(ok, given, elapsedMs, usedHint) {
+  const ex = current.ex;
+  const mod = current.mod;
+  const at = Date.now();
+  history.push({
+    t: at, m: mod.id, meth: settings.method, mode: session.mode,
+    y: ex.year, mo: ex.month, d: ex.day,
+    type: mod.answer, given: given, exp: mod.solution(ex).value,
+    ok: ok, ms: Math.round(elapsedMs), hint: usedHint,
+  });
+  if (history.length > HISTORY_LIMIT) history = history.slice(history.length - HISTORY_LIMIT);
+  invalidateDerived();
+
+  progress.attempts++;
+  const dayKey = todayKey(at);
+  progress.days[dayKey] = (progress.days[dayKey] || 0) + 1;
+  const bucket = progress.byModule[mod.id] || { attempts: 0, correct: 0 };
+  bucket.attempts++;
+  session.answered++;
+  session.missesBefore = session.consecutiveMisses;
+
+  if (ok) {
+    progress.correct++;
+    bucket.correct++;
+    session.correct++;
+    session.run++;
+    session.streak++;
+    session.consecutiveMisses = 0;
+    session.bestStreak = Math.max(session.bestStreak, session.streak);
+    progress.bestStreak = Math.max(progress.bestStreak, session.streak);
+    progress.xp += xpFor(mod, elapsedMs, session.streak, usedHint);
+  } else {
+    session.wrong++;
+    session.streak = 0;
+    session.consecutiveMisses++;
+  }
+  progress.byModule[mod.id] = bucket;
+
+  persistHistory();
+  persistProgress();
+  checkAchievements({ kind: "answer", module: mod.id, ok: ok, ms: elapsedMs, hint: usedHint, at: at });
+}
+
+function submitAnswer(given) {
+  if (current === null || current.answered || session.over) return;
+  const elapsedMs = performance.now() - current.startedAt;
+  const ok = current.mod.accepts(current.ex, given) === true;
+  current.answered = true;
+  current.given = given;
+  current.ok = ok;
+  recordAttempt(ok, given, elapsedMs, false);
+  renderDrill();
+  renderTop();
+  renderNav();
+  renderSide();
+  if (ok) {
+    celebrate(session.streak >= 10 ? "big" : "good");
+    beep(true);
+    advanceTimer = setTimeout(() => { if (!session.over) nextQuestion(); }, ADVANCE_DELAY_MS);
+  } else {
+    beep(false);
+    if (session.mode === "survival") endSurvival();
+  }
+}
+
+function skipQuestion() {
+  if (current === null || session.over) return;
+  session.streak = 0;
+  clearTimeout(advanceTimer);
+  nextQuestion();
+  renderSide();
+}
+
+function revealSolution() {
+  if (current === null || current.answered || session.over) return;
+  const elapsedMs = performance.now() - current.startedAt;
+  current.answered = true;
+  current.hint = true;
+  current.ok = false;
+  recordAttempt(false, null, elapsedMs, true);
+  renderDrill();
+  renderTop();
+  renderNav();
+  renderSide();
+  if (session.mode === "survival") endSurvival();
+}
+
+function showExample() {
+  if (current === null) return;
+  current.example = exampleFor(current.mod.id);
+  renderDrill();
+}
+
+/* ============================== rendering ================================ */
+
+const el = {
+  kicker: document.getElementById("kicker"),
+  prompt: document.getElementById("prompt"),
+  pad: document.getElementById("pad"),
+  verdict: document.getElementById("verdict"),
+  work: document.getElementById("work"),
+  actions: document.getElementById("actions"),
+  card: document.getElementById("drillCard"),
+  modeline: document.getElementById("modeline"),
+  howto: document.getElementById("howto"),
+  learn: document.getElementById("learnPanel"),
+  nav: document.getElementById("stepNav"),
+  side: document.getElementById("sessionPanel"),
+  ach: document.getElementById("achPanel"),
+  rhythm: document.getElementById("rhythmPanel"),
+  lvlLabel: document.getElementById("lvlLabel"),
+  xpFill: document.getElementById("xpFill"),
+  xpLabel: document.getElementById("xpLabel"),
+};
+
+function renderAll() {
+  renderTop();
+  renderNav();
+  if (moduleById(state.module).kind === "panel") {
+    el.card.classList.add("hidden");
+    el.learn.classList.remove("hidden");
+    renderLearn();
+  } else {
+    el.learn.classList.add("hidden");
+    el.card.classList.remove("hidden");
+    renderDrill();
+  }
+  renderSide();
+}
+
+function renderTop() {
+  const lv = levelOf(progress.xp);
+  el.lvlLabel.textContent = "LV " + lv.level;
+  el.xpFill.style.width = Math.round((lv.into / lv.need) * 100) + "%";
+  el.xpLabel.textContent = progress.xp + " XP";
+  for (const b of document.querySelectorAll("#modeSeg button"))
+    b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode));
+  document.getElementById("difficultySel").value = settings.difficulty;
+}
+
+function renderNav() {
+  const parts = MODULES.map((m, i) => {
+    const isCurrent = m.id === state.module;
+    const label = m.kind === "drill" ? String(i) : "★";
+    let ring = "";
+    if (m.kind === "drill") {
+      const mastery = masteryOf(m.id);
+      const circumference = 2 * Math.PI * 10;
+      ring = "<svg class='ring' viewBox='0 0 26 26' aria-hidden='true'>" +
+        "<circle class='bg' cx='13' cy='13' r='10'></circle>" +
+        "<circle class='fg' cx='13' cy='13' r='10' stroke-dasharray='" +
+        (mastery * circumference).toFixed(1) + " " + circumference.toFixed(1) + "'></circle></svg>";
+    }
+    return "<button type='button' class='step' data-module='" + m.id + "' aria-current='" + isCurrent + "'>" +
+      "<span class='idx'>" + label + "</span>" +
+      "<span class='lbl'><b>" + esc(m.short) + "</b><span>" + esc(m.blurb) + "</span></span>" + ring + "</button>";
+  });
+  el.nav.innerHTML = "<div class='navhead'>Steps</div>" + parts.join("");
+}
+
+function renderDrill() {
+  const mod = moduleById(state.module);
+  if (mod.kind !== "drill") return;
+  if (current === null) { startQuestion(); return; }
+  if (session.over) { renderSessionOver(mod); return; }
+
+  const ex = current.ex;
+  const spec = mod.ask(ex);
+  const range = rangeOf();
+
+  const chips = ["<span class='chip'>" + esc(range.label) + "</span>"];
+  if (mod.id === "yearoffset" || mod.id === "yeardoomsday" || mod.id === "full")
+    chips.push("<span class='chip'>" + esc(OFFSET_METHODS[settings.method].label) + "</span>");
+  if (session.mode === "survival") chips.push("<span class='chip'>run " + session.run + "</span>");
+  el.kicker.innerHTML = "<span>" + esc(mod.title) + "</span>" + chips.join("") +
+    "<span style='margin-left:auto' class='mono'>#" + (state.index + 1) + "</span>";
+  renderModeLine();
+  renderHowTo(mod);
+
+  const given = (spec.given === undefined ? [] : spec.given)
+    .map(([k, v]) => "<span class='g'>" + esc(k) + " <b>" + esc(v) + "</b></span>").join("");
+  el.prompt.className = "prompt";
+  void el.prompt.offsetWidth;
+  el.prompt.className = "prompt enter";
+  el.prompt.innerHTML =
+    "<div class='ask'>" + esc(spec.ask) + "</div>" +
+    "<div class='subject'>" + esc(spec.subject) + "</div>" +
+    (spec.sub === "" ? "" : "<div class='sub'>" + esc(spec.sub) + "</div>") +
+    (given === "" ? "" : "<div class='given'>" + given + "</div>");
+
+  renderPad(mod);
+  renderVerdict(mod);
+  renderWork(mod);
+  renderActions(mod);
+}
+
+function renderModeLine() {
+  const info = MODE_INFO[state.mode];
+  if (info === undefined) fail("No description for mode:", { mode: state.mode });
+  const extras = [];
+  if (state.mode === "sprint") {
+    extras.push(settings.sprintSeconds + " seconds");
+    const best = progress.bestSprint[state.module + "|" + settings.difficulty + "|" + settings.sprintSeconds];
+    if (best !== undefined) extras.push("your best here: " + best);
+  }
+  if (state.mode === "survival") {
+    const best = progress.bestSurvival[state.module + "|" + settings.difficulty];
+    if (best !== undefined) extras.push("your best here: " + best);
+  }
+  el.modeline.innerHTML = info.emoji + " <b>" + esc(info.label) + "</b> — " + esc(info.blurb) +
+    (extras.length === 0 ? "" : " <span class='chip'>" + extras.map(esc).join("</span> <span class='chip'>") + "</span>");
+}
+
+function renderHowTo(mod) {
+  const open = settings.showHowTo === true;
+  el.howto.innerHTML = "<div class='howto'>" +
+    "<button type='button' data-act='toggle-howto' aria-expanded='" + open + "'>" +
+    "How this step works<span class='caret'>▾</span></button>" +
+    (open ? "<div class='howto-body'>" + howtoFor(mod.id) +
+      "<div class='actions'><button type='button' class='btn' data-act='goto-learn'>Full explanation, examples and cheat sheet</button></div></div>" : "") +
+    "</div>";
+}
+
+function renderPad(mod) {
+  const spec = padSpec(mod.answer);
+  const keys = spec.map((k) => {
+    let cls = "key";
+    if (current.answered) {
+      const isGiven = current.given !== null && k.value === current.given;
+      const isRight = mod.accepts(current.ex, k.value) === true;
+      if (isGiven) cls += current.ok ? " picked-good" : " picked-bad";
+      else if (isRight) cls += " reveal";
+    }
+    return "<button type='button' class='" + cls + "' data-value='" + String(k.value) + "'" +
+      (current.answered ? " disabled" : "") + ">" +
+      "<span>" + esc(k.label) + "</span>" +
+      (k.hint === "" ? "" : "<span class='hintkey'>" + esc(k.hint) + "</span>") + "</button>";
+  }).join("");
+  el.pad.className = "pad " + mod.answer;
+  el.pad.innerHTML = keys;
+  const stale = document.getElementById("numentry");
+  if (mod.answer !== "number" && stale !== null) stale.remove();
+  if (mod.answer === "number") renderTyped();
+}
+
+function renderTyped() {
+  let entry = document.getElementById("numentry");
+  if (entry === null) {
+    entry = document.createElement("div");
+    entry.id = "numentry";
+    entry.className = "numentry";
+    el.pad.parentNode.insertBefore(entry, el.pad);
+  }
+  entry.innerHTML = current.answered
+    ? ""
+    : "type a number: <b>" + (typed === "" ? "–" : esc(typed)) + "</b> <span class='muted'>Enter to answer</span>";
+}
+
+function renderVerdict(mod) {
+  if (!current.answered) { el.verdict.className = "verdict"; el.verdict.textContent = ""; return; }
+  const solution = mod.solution(current.ex);
+  if (current.ok) {
+    el.verdict.className = "verdict good";
+    el.verdict.innerHTML = "<span class='flip'>✔</span> " + esc(solution.label) +
+      (session.streak > 1 ? " <span class='chip good'>streak " + session.streak + "</span>" : "");
+  } else {
+    el.verdict.className = "verdict bad";
+    const saidPart = current.hint || current.given === null
+      ? "Solution"
+      : "You said " + esc(formatAnswer(mod.answer, current.given));
+    el.verdict.innerHTML = "<span>✘</span> " + saidPart + " — the answer is <b>" + esc(solution.label) + "</b>";
+  }
+}
+
+function renderWork(mod) {
+  let html = "";
+  if (current.answered && (!current.ok || current.showWork === true))
+    html += "<div class='worktitle'>" + esc(workTitleFor(mod, current.ex)) + "</div>" +
+      renderDerivation(current.ex, { focus: mod.focus, only: explainedSteps(mod, current.ex) });
+  if (current.example !== null)
+    html += "<div class='worktitle'>Worked example — " + esc(formatDate(current.example)) + "</div>" +
+      renderDerivation(current.example, { focus: mod.focus, only: explainedSteps(mod, current.example) });
+  el.work.innerHTML = html;
+}
+
+function workTitleFor(mod, ex) {
+  const only = explainedSteps(mod, ex);
+  if (only === undefined) return "Every step, in full";
+  return only.length === 1 ? "The working" : "The steps that matter here";
+}
+
+function renderActions(mod) {
+  const buttons = [];
+  if (current.answered) {
+    buttons.push("<button type='button' class='btn primary grow' data-act='next'>Next question <kbd>Enter</kbd></button>");
+    if (current.ok && !current.showWork)
+      buttons.push("<button type='button' class='btn' data-act='work'>Show working</button>");
+  } else {
+    buttons.push("<button type='button' class='btn' data-act='skip'>Skip <kbd>S</kbd></button>");
+    buttons.push("<button type='button' class='btn' data-act='hint'>Show solution <kbd>H</kbd></button>");
+  }
+  buttons.push("<button type='button' class='btn' data-act='example'>" +
+    (current.example === null ? "Example" : "Another example") + " <kbd>E</kbd></button>");
+  if (mod.id !== "full")
+    buttons.push("<button type='button' class='btn' data-act='goto-full'>Try the whole thing</button>");
+  el.actions.innerHTML = buttons.join("");
+}
+
+function renderSessionOver(mod) {
+  const isSprint = session.mode === "sprint";
+  const showsAnswer = current !== null && current.answered;
+  const key = isSprint
+    ? session.module + "|" + settings.difficulty + "|" + settings.sprintSeconds
+    : session.module + "|" + settings.difficulty;
+  const best = isSprint ? progress.bestSprint[key] : progress.bestSurvival[key];
+  const score = isSprint ? session.correct : session.run;
+  const standing = score === 0
+    ? (isSprint ? "nothing on the board this time" : "gone on the first question — have another go")
+    : best !== undefined && best > score ? "your best here is " + best
+    : "a new personal best 🎉";
+  el.kicker.innerHTML = "<span>" +
+    (isSprint ? "Time is up" : showsAnswer && !current.ok ? "That one ended the run" : "Run over") +
+    "</span><span class='chip'>" + esc(mod.title) + "</span>";
+  el.prompt.className = "prompt enter";
+  el.prompt.innerHTML =
+    "<div class='ask'>" + (isSprint ? "Correct answers in " + settings.sprintSeconds + " seconds" : "Answers before the first miss") + "</div>" +
+    "<div class='subject'>" + score + "</div>" +
+    "<div class='sub'>" + standing + "</div>" +
+    "<div class='given'><span class='g'>accuracy <b>" +
+      (session.answered === 0 ? "—" : Math.round((session.correct / session.answered) * 100) + "%") +
+    "</b></span><span class='g'>best streak <b>" + session.bestStreak + "</b></span></div>";
+  renderModeLine();
+  renderHowTo(mod);
+  if (showsAnswer) {
+    renderPad(mod);
+    renderVerdict(mod);
+  } else {
+    el.pad.className = "pad";
+    el.pad.innerHTML = "";
+    const entry = document.getElementById("numentry");
+    if (entry !== null) entry.remove();
+    el.verdict.className = "verdict";
+    el.verdict.textContent = "";
+  }
+  el.work.innerHTML = showsAnswer
+    ? "<div class='worktitle'>" + (current.ok ? "That last one, in full" : "Where the run ended") + "</div>" +
+      renderDerivation(current.ex, { focus: mod.focus, only: explainedSteps(mod, current.ex) })
+    : "";
+  el.actions.innerHTML =
+    "<button type='button' class='btn primary grow' data-act='again'>" +
+    (isSprint ? "New sprint" : "New run") + " <kbd>Enter</kbd></button>" +
+    "<button type='button' class='btn' data-act='practice'>Switch to practice</button>";
+}
+
+function renderSide() {
+  const d = derived();
+  const bucket = d.byModule[state.module];
+  const acc = bucket === undefined ? null : accuracyOf(bucket);
+  const med = bucket === undefined ? null : median(bucket.times);
+  const flames = Array.from({ length: 10 }, (_, i) =>
+    "<i class='" + (i < Math.min(session.streak, 10) ? "on" : "") + "'></i>").join("");
+
+  let timerHtml = "";
+  if (session.mode === "sprint" && !session.over) {
+    const left = Math.max(0, Math.ceil((session.endsAt - Date.now()) / 1000));
+    timerHtml = "<div class='timer" + (left <= SPRINT_WARN_SECONDS ? " low" : "") + "'>" + left + "s</div>";
+  }
+
+  el.side.innerHTML =
+    "<h3>This session</h3>" + timerHtml +
+    "<div class='statgrid'>" +
+      stat(session.correct, "correct") +
+      stat(session.wrong, "missed") +
+      stat(session.answered === 0 ? "—" : Math.round((session.correct / session.answered) * 100) + "%", "accuracy") +
+      stat(session.bestStreak, "best streak", { modifier: session.bestStreak >= 10 ? "hot" : undefined }) +
+    "</div>" +
+    "<div class='flames' title='current streak'>" + flames + "</div>" +
+    "<h3>" + esc(moduleById(state.module).short) + " — all time</h3>" +
+    "<div class='statgrid'>" +
+      stat(acc === null ? "—" : Math.round(acc * 100) + "%", "accuracy") +
+      stat(med === null ? "—" : (med / 1000).toFixed(1) + "s", "median") +
+    "</div>";
+
+  renderRhythm();
+
+  const badges = ACHIEVEMENTS.map((a) =>
+    "<span class='badge" + (a.id in unlocked ? " on" : "") + "' title='" + esc(a.name + " — " + a.hint) + "'>" +
+    a.emoji + "</span>").join("");
+  el.ach.innerHTML = "<h3>Achievements " +
+    "<span class='mono muted'>" + Object.keys(unlocked).length + "/" + ACHIEVEMENTS.length + "</span></h3>" +
+    "<div class='ach'>" + badges + "</div>" +
+    "<button type='button' class='btn' data-act='stats'>All statistics <kbd>T</kbd></button>";
+}
+
+function renderRhythm() {
+  const rhythm = practiceRhythm();
+  const nudge = practiceNudge(rhythm);
+  el.rhythm.innerHTML =
+    "<h3>The long game</h3>" +
+    "<div class='lastseen'><b>" + (rhythm.lastAt === null ? "not yet" : esc(relativeTime(rhythm.lastAt))) +
+      "</b><span>last practised</span></div>" +
+    "<div class='statgrid'>" +
+      streakStat(rhythm.day, "day streak", 3) +
+      streakStat(rhythm.week, "week streak", 3) +
+      streakStat(rhythm.month, "month streak", 2) +
+      stat(rhythm.totalDays, "days in total") +
+    "</div>" +
+    "<div class='nudge " + nudge.level + "'>" + esc(nudge.text) + "</div>";
+}
+
+function stat(value, label, options) {
+  const opts = options === undefined ? {} : options;
+  const modifier = opts.modifier === undefined ? "" : " " + opts.modifier;
+  const title = opts.title === undefined ? "" : " title='" + esc(opts.title) + "'";
+  const hint = opts.hint === undefined ? "" : "<div class='h'>" + esc(opts.hint) + "</div>";
+  return "<div class='stat" + modifier + "'" + title + "><div class='v'>" + esc(value) + "</div>" +
+    "<div class='k'>" + esc(label) + "</div>" + hint + "</div>";
+}
+
+/* The count is always shown, zero included. Under two periods it is not a run
+ * yet, so the tile fades and carries the date that would extend it. */
+function streakStat(period, label, hotAt) {
+  if (period.streak >= STREAK_MINIMUM)
+    return stat(period.streak, label, { modifier: period.streak >= hotAt ? "hot" : undefined });
+  const by = formatDeadline(period.deadline);
+  return stat(period.streak, label, {
+    modifier: "faint",
+    hint: "by " + by,
+    title: period.streak === 0
+      ? "No run going. Practise by " + by + " to start one."
+      : "One on its own is not a run yet — practise again by " + by + " to make it two.",
+  });
+}
+
+/* ============================== learn panel ============================== */
+
+const learnState = { ex: null, comparisonYear: null, cheatTab: "centuries" };
+
+const CENTURY_TABLE_START = 1600;
+const CENTURY_TABLE_END = 2300;
+const CONWAY_WIKI = "https://en.wikipedia.org/wiki/John_Horton_Conway";
+const RULE_WIKI = "https://en.wikipedia.org/wiki/Doomsday_rule";
+const CARROLL_WIKI = "https://en.wikipedia.org/wiki/Lewis_Carroll";
+
+function randomExample() {
+  const range = rangeOf();
+  const rng = mulberry32((Math.random() * 0xffffffff) >>> 0);
+  const s = uniformDate(rng, range);
+  return explainDate(s.year, s.month, s.day, settings.method);
+}
+
+/* A comparison year is only instructive when both methods have work to do: an
+ * odd two-digit year of at least 13 exercises every branch of both. */
+const COMPARISON_MIN_TWO_DIGIT_YEAR = 13;
+
+function instructiveComparisonYear() {
+  const range = rangeOf();
+  const fallback = randomExample().year;
+  const century = Math.floor(fallback / 100) * 100;
+  const candidates = [];
+  for (let yy = COMPARISON_MIN_TWO_DIGIT_YEAR; yy <= 99; yy += 2) {
+    const year = century + yy;
+    if (year >= range.min && year <= range.max) candidates.push(year);
+  }
+  if (candidates.length === 0) return fallback;
+  return pick(mulberry32((Math.random() * 0xffffffff) >>> 0), candidates);
+}
+
+function centuryTableHtml() {
+  const rows = [];
+  for (let y = CENTURY_TABLE_START; y <= CENTURY_TABLE_END; y += 100) {
+    const anchor = centuryAnchor(y);
+    rows.push("<tr><td class='mono'>" + y + "–" + (y + 99) + "</td><td class='mono'>" + anchor +
+      "</td><td>" + DAY_NAMES[anchor] + "</td></tr>");
+  }
+  return "<table class='cheat'><tr><th>Century</th><th>#</th><th>Anchor</th></tr>" + rows.join("") + "</table>";
+}
+
+function monthTableHtml() {
+  const rows = MONTH_NAMES.map((name, i) => {
+    const common = monthDoomsday(i + 1, false);
+    const leap = monthDoomsday(i + 1, true);
+    return "<tr><td>" + name + "</td><td class='mono'>" + common.canonical + "</td><td class='mono'>" +
+      leap.canonical + "</td><td class='muted'>" + MONTH_MNEMONICS[i] + "</td></tr>";
+  });
+  return "<table class='cheat'><tr><th>Month</th><th>Common</th><th>Leap</th><th>How to remember</th></tr>" +
+    rows.join("") + "</table>";
+}
+
+/* Interleaves cards with an "or", so the group reads as a choice at any width. */
+function optionsGroup(cards) {
+  return "<div class='options'>" + cards.join("<div class='or'>or</div>") + "</div>";
+}
+
+function optionCard(active, title, badge, body, action) {
+  return "<div class='optioncard" + (active ? " active" : "") + "'>" +
+    "<div class='opthead'><span class='radio' aria-hidden='true'></span><h3>" + esc(title) + "</h3>" +
+    (active ? "<span class='chip'>" + esc(badge) + "</span>" : "") + "</div>" +
+    body + (active ? "" : action) + "</div>";
+}
+
+function methodOptionsHtml(year) {
+  return optionsGroup(Object.keys(OFFSET_METHODS).map((method) => {
+    const step = derivationSteps(explainDate(year, 6, 6, method)).find((s) => s.id === "yearoffset");
+    return optionCard(
+      method === settings.method,
+      OFFSET_METHODS[method].label,
+      "in use",
+      "<div class='caption'>How it goes</div>" + orderedList(METHOD_PROCEDURE[method]) +
+        "<div class='caption'>Worked on ’" + pad2(year % 100) + "</div>" + renderWorkLines(step.lines) +
+        "<div class='res'>" + step.result + "</div>" +
+        "<div class='caption'>What it costs you</div><ul>" +
+        METHOD_TRADEOFFS[method].map((t) => "<li>" + esc(t) + "</li>").join("") + "</ul>",
+      "<button type='button' class='btn' data-act='use-method' data-method='" + method + "'>Use this method</button>");
+  }));
+}
+
+const LEARN_SECTION_TINTS = {
+  purpose: "174 70% 45%",
+  steps: "199 89% 55%",
+  example: "262 83% 66%",
+  methods: "43 96% 50%",
+  modes: "340 82% 62%",
+  cheatsheet: "142 60% 45%",
+  credits: "24 90% 58%",
+};
+const SECTION_FLASH_MS = 1900;
+const CHEAT_TABS = [
+  { id: "centuries", label: "Century anchors", build: centuryTableHtml },
+  { id: "months", label: "Month doomsdays", build: monthTableHtml },
+];
+
+/* Each part of the page sits on its own surface, tinted differently, so the
+ * example, the steps, the modes, the tables and the credits never run together. */
+function learnSection(id, title, body) {
+  const tint = LEARN_SECTION_TINTS[id];
+  if (tint === undefined) fail("No tint defined for learn section:", { id: id, known: Object.keys(LEARN_SECTION_TINTS) });
+  return "<section class='lsec' id='" + id + "' style='--tint:" + tint + "'>" +
+    (title === null ? "" : "<h2>" + esc(title) + "</h2>") + body.join("") + "</section>";
+}
+
+function flashSection(id) {
+  const section = document.getElementById(id);
+  if (section === null) return;
+  section.scrollIntoView({ behavior: motionEnabled() ? "smooth" : "auto", block: "start" });
+  section.classList.add("flash");
+  setTimeout(() => section.classList.remove("flash"), SECTION_FLASH_MS);
+}
+
+function cheatTabsHtml() {
+  const active = CHEAT_TABS.find((t) => t.id === learnState.cheatTab);
+  if (active === undefined) fail("Unknown cheat-sheet tab:", { tab: learnState.cheatTab, known: CHEAT_TABS.map((t) => t.id) });
+  return "<div class='tabs' role='tablist'>" + CHEAT_TABS.map((tab) =>
+      "<button type='button' role='tab' aria-selected='" + (tab.id === active.id) + "'" +
+      " data-act='cheat-tab' data-tab='" + tab.id + "'>" + esc(tab.label) + "</button>").join("") +
+    "</div><div role='tabpanel' class='scrollx'>" + active.build() + "</div>";
+}
+
+function renderLearn() {
+  if (learnState.ex === null) learnState.ex = randomExample();
+  if (learnState.comparisonYear === null) learnState.comparisonYear = instructiveComparisonYear();
+  const ex = learnState.ex;
+
+  el.learn.innerHTML = [
+    learnSection("purpose", "What this page is for", [
+      "<p><strong>To train you to name the day of the week for any date, in your head, in a couple of seconds.</strong></p>",
+      "<p>The method is the <a href='" + RULE_WIKI + "' target='_blank' rel='noopener noreferrer'>doomsday rule</a>, " +
+        "devised in 1973 by <a href='" + CONWAY_WIKI + "' target='_blank' rel='noopener noreferrer'>John Horton Conway</a>. " +
+        "Every year has a <strong>doomsday</strong>: the one weekday on which 4/4, 6/6, 8/8, 10/10, 12/12, 9/5, 5/9, 7/11, 11/7 and the last day of February all fall. Find it, count from the nearest of those dates, and you have the answer.</p>",
+      "<p>It breaks into seven steps, each drilled separately here. Short and often beats long and rare.</p>",
+    ]),
+
+    learnSection("steps", "The seven steps, briefly", [
+      "<ol class='steplist'>" + DRILLS.map((m) =>
+        "<li><button type='button' data-module='" + m.id + "'><b>" + esc(m.title) + "</b><span>" +
+        esc(HOWTO_SUMMARY[m.id]) + "</span></button></li>").join("") + "</ol>",
+      "<p class='muted'>Click any step to drill it. Steps 1 to 6 build the answer; step 7 is the whole thing with nothing given.</p>",
+    ]),
+
+    learnSection("example", "A complete worked example", [
+      "<p>These seven boxes are a <strong>sequence</strong>, not a menu: the line runs from each one into the next, and the last box is the answer.</p>",
+      "<div class='dateform'>",
+        "<button type='button' class='btn' data-act='learn-random'>Random date</button>",
+        "<span class='muted'>or</span>",
+        "<label class='field'><span>Year</span><input class='mono yr' id='learnYear' type='number' inputmode='numeric' min='" + MIN_YEAR + "' max='" + MAX_YEAR + "' value='" + ex.year + "'></label>",
+        "<label class='field'><span>Month</span><input class='mono md' id='learnMonth' type='number' inputmode='numeric' min='1' max='12' value='" + ex.month + "'></label>",
+        "<label class='field'><span>Day</span><input class='mono md' id='learnDay' type='number' inputmode='numeric' min='1' max='31' value='" + ex.day + "'></label>",
+        "<button type='button' class='btn' data-act='learn-date'>Work it out</button>",
+      "</div>",
+      "<div class='work'>" + renderDerivation(ex, { notes: {
+        yearoffset: "<div class='chainnote'><span class='fork' aria-hidden='true'>⑂</span>" +
+          "<span>Two ways from here — and only here. The step below uses <strong>" +
+          esc(OFFSET_METHODS[settings.method].label) + "</strong>, the one you picked; the other reaches the same number.</span>" +
+          "<button type='button' data-act='goto-methods'>Compare both methods ↓</button></div>",
+      } }) + "</div>",
+      "<div class='actions'><button type='button' class='btn primary' data-act='goto-full'>Try one yourself</button></div>",
+    ]),
+
+    learnSection("methods", "Step 3 only: pick one of these two", [
+      "<p>Every other step is the same for everybody. Step 3 — how far the year's doomsday has drifted inside its century — can be worked out two different ways. <strong>They always give the same number</strong>, so this is a choice of habit, not of correctness: take whichever your head runs faster. Your pick drives the drill and every worked solution on the page.</p>",
+      "<div class='dateform'><button type='button' class='btn' data-act='learn-reroll-method'>Another year</button>" +
+        "<span class='muted'>example year <b class='mono'>" + learnState.comparisonYear + "</b></span></div>",
+      methodOptionsHtml(learnState.comparisonYear),
+    ]),
+
+    learnSection("modes", "The three ways to play", [
+      optionsGroup(MODES.map((mode) => {
+        const info = MODE_INFO[mode];
+        const detail = mode === "sprint"
+          ? "Currently " + settings.sprintSeconds + " seconds — change it in Settings. Your best score is kept for each step and year range."
+          : mode === "survival"
+            ? "Your longest run is kept for each step and year range. The answer and the full working are shown when the run ends."
+            : "Nothing is timed against you, but how long each answer takes is recorded for your statistics.";
+        return optionCard(state.mode === mode, info.emoji + " " + info.label, "playing",
+          "<p>" + esc(info.blurb) + "</p><p class='muted' style='font-size:.84rem'>" + esc(detail) + "</p>",
+          "<button type='button' class='btn' data-mode='" + mode + "'>Play " + esc(info.label) + "</button>");
+      })),
+    ]),
+
+    learnSection("cheatsheet", "Cheat sheet", [
+      cheatTabsHtml(),
+      "<p class='muted'>Century anchors run <strong>Tuesday, Sunday, Friday, Wednesday</strong> and repeat every 400 years. Some people prefer the mnemonic “<strong>Tu</strong>ition is <strong>Su</strong>ndays, <strong>Fri</strong>days and <strong>We</strong>dnesdays”.</p>",
+    ]),
+
+    learnSection("credits", "Who to thank", [
+      "<p><a href='" + CONWAY_WIKI + "' target='_blank' rel='noopener noreferrer'>John Horton Conway</a> (26 December 1937 – 11 April 2020), the mathematician behind the Game of Life, surreal numbers and the monstrous moonshine conjectures, devised the <a href='" + RULE_WIKI + "' target='_blank' rel='noopener noreferrer'>doomsday rule</a> in <strong>1973</strong>. He built it on an earlier method published by <a href='" + CARROLL_WIKI + "' target='_blank' rel='noopener noreferrer'>Lewis Carroll</a> in 1887, compressing it into something a person can genuinely run in their head. Conway drilled himself with it daily: his computer greeted him with random dates before it would let him log in. He died of COVID-19 in 2020.</p>",
+      "<p>The name is Conway's joke — the anchor day is “doomsday”, the last day of February, which the whole calendar hangs from.</p>",
+    ]),
+  ].join("");
+}
+
+/* ============================ statistics dialog ========================== */
+
+const HEATMAP_WEEKS = 17;
+
+function renderStats() {
+  const d = derived();
+  const lv = levelOf(progress.xp);
+  const days = Object.keys(progress.days).length;
+  const overallAccuracy = progress.attempts === 0 ? "—" : Math.round((progress.correct / progress.attempts) * 100) + "%";
+
+  const moduleRows = DRILLS.map((m) => {
+    const b = d.byModule[m.id];
+    const acc = accuracyOf(b);
+    const med = median(b.times);
+    return "<tr><td>" + esc(m.short) + "</td><td class='mono'>" + b.attempts + "</td><td class='mono'>" +
+      (acc === null ? "—" : Math.round(acc * 100) + "%") + "</td><td class='mono'>" +
+      (med === null ? "—" : (med / 1000).toFixed(1) + "s") + "</td><td class='mono'>" +
+      Math.round(masteryOf(m.id) * 100) + "%</td></tr>";
+  }).join("");
+
+  const matrixRows = DAY_ABBR.map((abbr, expected) => {
+    const cells = DAY_ABBR.map((_, given) => {
+      const n = d.confusion[expected][given];
+      const cls = n === 0 ? "" : (expected === given ? "hit" : "miss");
+      return "<td class='" + cls + "'>" + (n === 0 ? "·" : n) + "</td>";
+    }).join("");
+    return "<tr><th>" + abbr + "</th>" + cells + "</tr>";
+  }).join("");
+
+  const today = new Date();
+  const cells = [];
+  for (let i = HEATMAP_WEEKS * 7 - 1; i >= 0; i--) {
+    const day = new Date(today.getTime() - i * 86400000);
+    const key = todayKey(day.getTime());
+    const count = progress.days[key] || 0;
+    const strength = count === 0 ? 0 : Math.min(1, 0.25 + count / 40);
+    cells.push("<i title='" + key + ": " + count + "' style='background:" +
+      (count === 0 ? "var(--card-2)" : "color-mix(in srgb, var(--accent) " + Math.round(strength * 100) + "%, var(--card-2))") +
+      "'></i>");
+  }
+
+  const records = [];
+  for (const [key, value] of Object.entries(progress.bestSprint))
+    records.push("<tr><td>Sprint</td><td class='mono'>" + esc(key.replace(/\|/g, " · ")) + "</td><td class='mono'>" + value + "</td></tr>");
+  for (const [key, value] of Object.entries(progress.bestSurvival))
+    records.push("<tr><td>Survival</td><td class='mono'>" + esc(key.replace(/\|/g, " · ")) + "</td><td class='mono'>" + value + "</td></tr>");
+
+  const achRows = ACHIEVEMENTS.map((a) => {
+    const on = a.id in unlocked;
+    return "<tr><td>" + a.emoji + "</td><td>" + esc(a.name) + "</td><td class='muted'>" + esc(a.hint) + "</td>" +
+      "<td class='mono'>" + (on ? new Date(unlocked[a.id]).toLocaleDateString() : "locked") + "</td></tr>";
+  }).join("");
+
+  const rhythm = practiceRhythm();
+  document.getElementById("statsBody").innerHTML = [
+    "<div class='dlghead'><h2>Statistics</h2><button class='btn' data-act='close-stats'>Close</button></div>",
+    "<div class='statgrid' style='grid-template-columns:repeat(auto-fit,minmax(120px,1fr))'>",
+      stat("LV " + lv.level, "level"), stat(progress.xp, "xp"), stat(progress.attempts, "answers"),
+      stat(overallAccuracy, "accuracy"), stat(progress.bestStreak, "best streak"), stat(days, "days practised"),
+    "</div>",
+    "<h3>The long game</h3>",
+    "<div class='statgrid' style='grid-template-columns:repeat(auto-fit,minmax(120px,1fr))'>",
+      stat(rhythm.lastAt === null ? "—" : relativeTime(rhythm.lastAt), "last practised"),
+      streakStat(rhythm.day, "day streak", 3), stat(rhythm.day.longest, "longest day run"),
+      streakStat(rhythm.week, "week streak", 3), stat(rhythm.week.longest, "longest week run"),
+      streakStat(rhythm.month, "month streak", 2), stat(rhythm.month.longest, "longest month run"),
+    "</div>",
+    "<div class='nudge " + practiceNudge(rhythm).level + "'>" + esc(practiceNudge(rhythm).text) + "</div>",
+    "<h3>By step</h3><div class='scrollx'><table class='cheat'>",
+      "<tr><th>Step</th><th>Answers</th><th>Accuracy</th><th>Median</th><th>Last " + MASTERY_WINDOW + "</th></tr>",
+      moduleRows, "</table></div>",
+    "<h3>Which weekday you say when the answer is…</h3>",
+    "<div class='scrollx'><table class='matrix'><tr><th></th>" +
+      DAY_ABBR.map((a) => "<th>" + a + "</th>").join("") + "</tr>" + matrixRows + "</table></div>",
+    "<p class='muted' style='font-size:.8rem'>Rows are the right answer, columns what you actually pressed. Anything off the diagonal is a habit worth breaking.</p>",
+    "<h3>Last " + HEATMAP_WEEKS + " weeks</h3><div class='scrollx'><div class='heat'>" + cells.join("") + "</div></div>",
+    records.length === 0 ? "" : "<h3>Records</h3><div class='scrollx'><table class='cheat'>" +
+      "<tr><th>Mode</th><th>Setup</th><th>Best</th></tr>" + records.join("") + "</table></div>",
+    "<h3>Achievements</h3><div class='scrollx'><table class='cheat'>" + achRows + "</table></div>",
+  ].join("");
+}
+
+/* ============================== animations =============================== */
+
+const fxCanvas = document.getElementById("fx");
+const fxCtx = fxCanvas.getContext("2d");
+
+/* Effects that open at the answer itself, so a fast drill still sees something
+ * the instant it is right, and effects that need room and a second to develop. */
+const ORIGIN_EFFECTS = ["confetti", "starburst", "spiral", "bloom"];
+const WIDE_EFFECTS = ["fountain", "comets", "fireworks"];
+const EFFECT_NAMES = ORIGIN_EFFECTS.concat(WIDE_EFFECTS);
+const WIDE_EFFECT_INTENSITY = 1.4;
+const CELEBRATION_INTENSITY = { good: 1, big: 1.8, record: 2.3, achievement: 1.4 };
+const MAX_PARTICLES = 700;
+const GRAVITY = 0.22;
+const AIR_DRAG = 0.992;
+
+/* Hue offsets from a random base: analogous, triad, split-complementary, warm
+ * spread. Picking a scheme per burst keeps a celebration coloured but coherent. */
+const COLOUR_SCHEMES = [[0, 26, -26], [0, 120, 240], [0, 165, 195], [0, 40, 80]];
+const PARTICLE_SATURATION = 70;
+const PARTICLE_LIGHTNESS = 58;
+const LIGHTNESS_SPREAD = 7;
+
+function palette(baseHue) {
+  const scheme = COLOUR_SCHEMES[Math.floor(Math.random() * COLOUR_SCHEMES.length)];
+  return scheme.map((offset, i) => ({
+    hue: (baseHue + offset + 360) % 360,
+    lightness: PARTICLE_LIGHTNESS + (i % 2 === 0 ? LIGHTNESS_SPREAD : -LIGHTNESS_SPREAD) * 0.5,
+  }));
+}
+
+function tone(tones, alpha) {
+  const picked = tones[Math.floor(Math.random() * tones.length)];
+  return { hue: picked.hue, lightness: picked.lightness, alpha: alpha };
+}
+
+function toneCss(t, alpha) {
+  return "hsl(" + t.hue + " " + PARTICLE_SATURATION + "% " + t.lightness + "% / " + alpha.toFixed(3) + ")";
+}
+
+function resizeFx() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  fxCanvas.width = Math.floor(window.innerWidth * dpr);
+  fxCanvas.height = Math.floor(window.innerHeight * dpr);
+  fxCanvas.style.width = window.innerWidth + "px";
+  fxCanvas.style.height = window.innerHeight + "px";
+  fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function motionEnabled() {
+  switch (settings.motion) {
+    case "full": return true;
+    case "off": return false;
+    default: return fail("Unknown motion setting:", { motion: settings.motion, known: MOTIONS });
+  }
+}
+
+let fxParticles = [];
+let fxRaf = null;
+
+/* The one place particle defaults live — anything built any other way drifts
+ * out of date the moment a field is added. */
+function makeParticle(p) {
+  return Object.assign({
+    shape: "dot", motion: "free", x: 0, y: 0, px: 0, py: 0, ox: 0, oy: 0, vx: 0, vy: 0,
+    life: 0, maxLife: 80, size: 5, spin: 0, spinRate: 0, flutter: 0, phase: 0,
+    gravity: 0, drag: AIR_DRAG, trail: false, twinkle: 0, delay: 0,
+    squash: 1, tilt: 0, growth: 1, reach: 250,
+    tone: { hue: 180, lightness: PARTICLE_LIGHTNESS }, alpha: 0.8,
+  }, p);
+}
+
+function particle(p) {
+  if (fxParticles.length >= MAX_PARTICLES) return;
+  fxParticles.push(makeParticle(p));
+}
+
+function spawnEffect(name, origin, tones, intensity) {
+  const n = Math.round(intensity * 52);
+  switch (name) {
+    /* Fired on every celebration: a punchy hit exactly where the answer is,
+     * peaking within a few frames and gone before the next question. */
+    case "core":
+      particle({
+        shape: "ring", motion: "still", x: origin.x, y: origin.y, size: 3.5,
+        reach: 120 + Math.random() * 90, maxLife: 26, tone: tone(tones), alpha: 0.55,
+      });
+      for (let i = 0; i < 30; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 5 + Math.random() * 9;
+        particle({
+          shape: "dot", x: origin.x, y: origin.y, px: origin.x, py: origin.y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          size: 1.6 + Math.random() * 2.4, drag: 0.88, gravity: 0.06, trail: true,
+          maxLife: 26 + Math.random() * 18, tone: tone(tones), alpha: 0.8,
+        });
+      }
+      for (let i = 0; i < 10; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2.5 + Math.random() * 5;
+        particle({
+          shape: "star", x: origin.x, y: origin.y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.5,
+          size: 4 + Math.random() * 5, drag: 0.9, spinRate: (Math.random() - 0.5) * 0.12,
+          twinkle: 0.2, maxLife: 40 + Math.random() * 22, tone: tone(tones), alpha: 0.8,
+        });
+      }
+      break;
+    case "confetti":
+      for (let i = 0; i < n * 1.7; i++) {
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.15;
+        const speed = 3.5 + Math.random() * 8.5 * intensity;
+        particle({
+          shape: "ribbon", x: origin.x, y: origin.y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          size: 5 + Math.random() * 6, gravity: GRAVITY, drag: 0.986,
+          spin: Math.random() * Math.PI, spinRate: (Math.random() - 0.5) * 0.22,
+          flutter: 0.12 + Math.random() * 0.16, phase: Math.random() * Math.PI * 2,
+          maxLife: 85 + Math.random() * 55, tone: tone(tones), alpha: 0.85,
+        });
+      }
+      break;
+    case "starburst":
+      for (let i = 0; i < n; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.6 + Math.random() * 6 * intensity;
+        particle({
+          shape: "star", x: origin.x, y: origin.y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.6,
+          size: 4 + Math.random() * 7, drag: 0.93, gravity: 0.02,
+          spin: Math.random() * Math.PI, spinRate: (Math.random() - 0.5) * 0.07,
+          twinkle: 0.12 + Math.random() * 0.16,
+          maxLife: 70 + Math.random() * 45, tone: tone(tones), alpha: 0.8,
+        });
+      }
+      for (let i = 0; i < n; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        particle({
+          shape: "dot", x: origin.x, y: origin.y,
+          vx: Math.cos(angle) * (1 + Math.random() * 4), vy: Math.sin(angle) * (1 + Math.random() * 4),
+          size: 1 + Math.random() * 1.8, drag: 0.95, twinkle: 0.3,
+          maxLife: 45 + Math.random() * 40, tone: tone(tones), alpha: 0.7,
+        });
+      }
+      break;
+    case "fountain":
+      for (let i = 0; i < n * 1.4; i++) {
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.75;
+        const speed = 8 + Math.random() * 8 * intensity;
+        particle({
+          shape: "dot", x: window.innerWidth / 2 + (Math.random() - 0.5) * 90, y: window.innerHeight + 8,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          size: 1.8 + Math.random() * 3.2, gravity: GRAVITY * 0.8, trail: true,
+          maxLife: 95 + Math.random() * 45, tone: tone(tones), alpha: 0.75,
+          delay: Math.floor(Math.random() * 18),
+        });
+      }
+      break;
+    case "comets":
+      for (let i = 0; i < Math.round(5 * intensity); i++) {
+        const fromLeft = Math.random() < 0.5;
+        const direction = fromLeft ? 1 : -1;
+        const startX = fromLeft ? -60 : window.innerWidth + 60;
+        const startY = Math.random() * window.innerHeight * 0.75;
+        const speed = 9 + Math.random() * 8;
+        const drop = (Math.random() - 0.35) * 2.6;
+        const head = tone(tones);
+        particle({
+          shape: "dot", x: startX, y: startY, px: startX, py: startY,
+          vx: direction * speed, vy: drop,
+          size: 2.2 + Math.random() * 2.4, drag: 0.998, trail: true,
+          maxLife: 85 + Math.random() * 30, tone: head, alpha: 0.7, delay: i * 5,
+        });
+        /* the tail breaks up behind the head instead of the head flying alone */
+        for (let j = 1; j <= 6; j++)
+          particle({
+            shape: "dot", x: startX, y: startY, px: startX, py: startY,
+            vx: direction * speed * (0.94 - j * 0.03), vy: drop + (Math.random() - 0.5) * 0.5,
+            size: 1 + Math.random() * 1.4, drag: 0.99, trail: true, twinkle: 0.25,
+            maxLife: 40 + Math.random() * 35, tone: head, alpha: 0.45,
+            delay: i * 5 + j * 2,
+          });
+      }
+      break;
+    case "spiral": {
+      /* the whole figure is redrawn each time: how many arms, which way it
+       * turns, how tight it winds, how far it is tipped over, and whether it
+       * is made of dots or stars */
+      const arms = 1 + Math.floor(Math.random() * 4);
+      const direction = Math.random() < 0.5 ? 1 : -1;
+      const spinRate = direction * (0.07 + Math.random() * 0.17);
+      const squash = 0.28 + Math.random() * 0.72;
+      const tilt = Math.random() * Math.PI;
+      const growth = 1.1 + Math.random() * 2.4 * intensity;
+      const starry = Math.random() < 0.35;
+      const stagger = 0.8 + Math.random() * 1.8;
+      const count = Math.round(n * 1.3);
+      for (let i = 0; i < count; i++) {
+        const arm = i % arms;
+        particle({
+          shape: starry ? "star" : "dot", motion: "orbit",
+          x: origin.x, y: origin.y, px: origin.x, py: origin.y, ox: origin.x, oy: origin.y,
+          size: starry ? 2.6 + Math.random() * 3 : 1.6 + Math.random() * 2.6,
+          spin: (arm / arms) * Math.PI * 2 + (Math.random() - 0.5) * 0.14,
+          spinRate: spinRate * (0.92 + Math.random() * 0.16),
+          growth: growth * (0.88 + Math.random() * 0.24),
+          squash: squash, tilt: tilt,
+          twinkle: starry ? 0.16 : 0,
+          trail: !starry, maxLife: 55 + Math.random() * 40,
+          tone: tone(tones), alpha: 0.65,
+          delay: Math.floor((i / arms) * stagger),
+        });
+      }
+      break;
+    }
+    case "bloom":
+      for (let i = 0; i < Math.max(3, Math.round(intensity * 3)); i++)
+        particle({
+          shape: "ring", motion: "still", x: origin.x, y: origin.y, size: 2.5,
+          reach: 190 + Math.random() * 150, maxLife: 46 + i * 4, delay: i * 8,
+          tone: tone(tones), alpha: 0.5,
+        });
+      for (let i = 0; i < n * 0.7; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.5 + Math.random() * 2.6;
+        particle({
+          shape: "star", x: origin.x, y: origin.y,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.35,
+          size: 3 + Math.random() * 5, drag: 0.965, spinRate: (Math.random() - 0.5) * 0.05,
+          twinkle: 0.1 + Math.random() * 0.12,
+          maxLife: 80 + Math.random() * 40, tone: tone(tones), alpha: 0.7,
+        });
+      }
+      break;
+    case "fireworks":
+      for (let i = 0; i < Math.max(2, Math.round(intensity * 2)); i++)
+        particle({
+          shape: "shell", x: window.innerWidth * (0.25 + Math.random() * 0.5), y: window.innerHeight + 10,
+          vx: (Math.random() - 0.5) * 1.6, vy: -(12 + Math.random() * 3),
+          size: 2.4, gravity: 0.16, drag: 1, trail: true, burstAt: 46 + Math.random() * 12,
+          maxLife: 200, tone: tone(tones), alpha: 0.85, delay: i * 16,
+        });
+      break;
+    default:
+      fail("Unknown effect name:", { name: name });
+  }
+}
+
+/* A shell reaching its apex turns into a shower; nothing else spawns mid-flight. */
+function burstShell(shell, spawned) {
+  const count = 26 + Math.floor(Math.random() * 16);
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.12;
+    const speed = 2.2 + Math.random() * 3.4;
+    spawned.push(makeParticle({
+      shape: "dot", x: shell.x, y: shell.y, px: shell.x, py: shell.y,
+      vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      size: 1.6 + Math.random() * 1.8, gravity: 0.075, drag: 0.968, trail: true,
+      twinkle: 0.22, maxLife: 70 + Math.random() * 45, tone: shell.tone, alpha: 0.8,
+    }));
+  }
+}
+
+function traceStar(radius) {
+  const points = 5;
+  const inner = radius * 0.44;
+  fxCtx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? radius : inner;
+    const angle = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) fxCtx.moveTo(x, y); else fxCtx.lineTo(x, y);
+  }
+  fxCtx.closePath();
+}
+
+function drawParticle(p, fade) {
+  let alpha = p.alpha * fade;
+  if (p.twinkle > 0) alpha *= 0.6 + 0.4 * Math.sin(p.life * p.twinkle * 4);
+  if (alpha <= 0.01) return;
+  const colour = toneCss(p.tone, alpha);
+
+  if (p.trail) {
+    fxCtx.strokeStyle = toneCss(p.tone, alpha * 0.35);
+    fxCtx.lineWidth = p.size * 1.1;
+    fxCtx.lineCap = "round";
+    fxCtx.beginPath();
+    fxCtx.moveTo(p.px, p.py);
+    fxCtx.lineTo(p.x, p.y);
+    fxCtx.stroke();
+  }
+
+  fxCtx.fillStyle = colour;
+  switch (p.shape) {
+    case "dot": case "shell":
+      fxCtx.beginPath();
+      fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      fxCtx.fill();
+      break;
+    case "ribbon": {
+      /* the width oscillates so the paper reads as flipping over */
+      const flip = Math.cos(p.phase + p.life * p.flutter);
+      fxCtx.save();
+      fxCtx.translate(p.x, p.y);
+      fxCtx.rotate(p.spin);
+      fxCtx.scale(Math.max(0.15, Math.abs(flip)), 1);
+      fxCtx.fillStyle = toneCss(p.tone, alpha * (flip < 0 ? 0.62 : 1));
+      fxCtx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66);
+      fxCtx.restore();
+      break;
+    }
+    case "star":
+      fxCtx.save();
+      fxCtx.translate(p.x, p.y);
+      fxCtx.rotate(p.spin);
+      fxCtx.shadowColor = toneCss(p.tone, alpha * 0.5);
+      fxCtx.shadowBlur = p.size * 1.6;
+      traceStar(p.size);
+      fxCtx.fill();
+      fxCtx.restore();
+      break;
+    case "ring": {
+      const grow = p.life / p.maxLife;
+      fxCtx.strokeStyle = toneCss(p.tone, alpha * (1 - grow) * 0.9);
+      fxCtx.lineWidth = p.size * (1 - grow * 0.6);
+      fxCtx.shadowColor = toneCss(p.tone, alpha * 0.4);
+      fxCtx.shadowBlur = 14;
+      fxCtx.beginPath();
+      fxCtx.arc(p.x, p.y, 14 + grow * p.reach, 0, Math.PI * 2);
+      fxCtx.stroke();
+      fxCtx.shadowBlur = 0;
+      break;
+    }
+    default:
+      fail("Unknown particle shape:", { shape: p.shape });
+  }
+}
+
+function stepParticle(p, spawned) {
+  p.px = p.x;
+  p.py = p.y;
+  switch (p.motion) {
+    case "free":
+      p.vx *= p.drag;
+      p.vy = p.vy * p.drag + p.gravity;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.spin += p.spinRate;
+      break;
+    case "orbit": {
+      p.spin += p.spinRate;
+      const radius = 8 + p.life * p.growth;
+      const across = Math.cos(p.spin) * radius;
+      const along = Math.sin(p.spin) * radius * p.squash;
+      p.x = p.ox + across * Math.cos(p.tilt) - along * Math.sin(p.tilt);
+      p.y = p.oy + across * Math.sin(p.tilt) + along * Math.cos(p.tilt);
+      break;
+    }
+    case "still":
+      break;
+    default:
+      fail("Unknown particle motion:", { motion: p.motion });
+  }
+  if (p.shape === "shell" && p.life >= p.burstAt) {
+    burstShell(p, spawned);
+    return false;
+  }
+  return true;
+}
+
+function startFx() {
+  if (fxRaf !== null) return;
+  const step = () => {
+    fxCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    const alive = [];
+    const spawned = [];
+    for (const p of fxParticles) {
+      if (p.delay > 0) { p.delay--; alive.push(p); continue; }
+      p.life++;
+      const t = p.life / p.maxLife;
+      if (t >= 1) continue;
+      /* ease in over the first frames, then ease out — no hard pops */
+      const fade = Math.min(1, p.life / 6) * (1 - t * t * t);
+      if (!stepParticle(p, spawned)) continue;
+      drawParticle(p, fade);
+      alive.push(p);
+    }
+    fxCtx.shadowBlur = 0;
+    fxParticles = alive.concat(spawned);
+    if (fxParticles.length === 0) { fxRaf = null; return; }
+    fxRaf = requestAnimationFrame(step);
+  };
+  fxRaf = requestAnimationFrame(step);
+}
+
+function celebrate(kind) {
+  if (!motionEnabled()) return;
+  const intensity = CELEBRATION_INTENSITY[kind];
+  if (intensity === undefined) fail("Unknown celebration kind:", { kind: kind });
+  const box = el.prompt.getBoundingClientRect();
+  const origin = box.width === 0
+    ? { x: window.innerWidth / 2, y: window.innerHeight * 0.4 }
+    : { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+  const tones = palette(Math.floor(Math.random() * 360));
+
+  spawnEffect("core", origin, tones, intensity);
+  const pool = intensity >= WIDE_EFFECT_INTENSITY ? EFFECT_NAMES : ORIGIN_EFFECTS;
+  const first = pool[Math.floor(Math.random() * pool.length)];
+  spawnEffect(first, origin, tones, intensity);
+  if (intensity >= 1.8) {
+    const rest = pool.filter((name) => name !== first);
+    spawnEffect(rest[Math.floor(Math.random() * rest.length)], origin, tones, intensity * 0.7);
+  }
+  startFx();
+}
+
+/* ================================ sound ================================== */
+
+let audio = null;
+
+function beep(good) {
+  if (!settings.sound) return;
+  if (audio === null) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (Ctor === undefined) return;
+    audio = new Ctor();
+  }
+  const notes = good ? [523.25, 783.99] : [196.0, 155.56];
+  notes.forEach((freq, i) => {
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = good ? "triangle" : "sawtooth";
+    osc.frequency.value = freq;
+    const at = audio.currentTime + i * 0.08;
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(0.12, at + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(at);
+    osc.stop(at + 0.25);
+  });
+}
+
+/* ================================ toasts ================================= */
+
+function toast(emoji, title, sub) {
+  const node = document.createElement("div");
+  node.className = "toast";
+  node.innerHTML = "<span class='em'>" + emoji + "</span><span><b>" + esc(title) + "</b><span>" + esc(sub) + "</span></span>";
+  document.getElementById("toasts").appendChild(node);
+  setTimeout(() => node.remove(), TOAST_LIFETIME_MS);
+}
+
+/* =============================== navigation ============================== */
+
+const indices = {};
+
+function setModule(id) {
+  if (id === state.module) return;
+  indices[state.module] = state.index;
+  state.module = id;
+  state.index = indices[id] === undefined ? 0 : indices[id];
+  if (state.mode !== "practice") resetSession();
+  session.module = id;
+  current = null;
+  writeHash(true);
+  renderAll();
+}
+
+function setMode(mode) {
+  if (MODES.indexOf(mode) === -1) fail("Unknown mode:", { mode: mode });
+  state.mode = mode;
+  toast(MODE_INFO[mode].emoji, MODE_INFO[mode].label, MODE_INFO[mode].blurb);
+  if (moduleById(state.module).kind !== "drill") setModule("full");
+  resetSession();
+  current = null;
+  writeHash(true);
+  renderAll();
+}
+
+function stepBy(delta) {
+  const order = MODULES.map((m) => m.id);
+  const at = order.indexOf(state.module);
+  setModule(order[(at + delta + order.length) % order.length]);
+}
+
+function startAgain() {
+  resetSession();
+  state.index++;
+  current = null;
+  writeHash(false);
+  renderAll();
+}
+
+/* ================================ events ================================= */
+
+const dialogs = {
+  help: document.getElementById("helpDlg"),
+  settings: document.getElementById("settingsDlg"),
+  stats: document.getElementById("statsDlg"),
+};
+
+function openStats() {
+  renderStats();
+  dialogs.stats.showModal();
+}
+
+function parsePadValue(answerType, raw) {
+  switch (answerType) {
+    case "yesno": return raw === "true";
+    case "weekday": case "digit7": case "number": return Number(raw);
+    default: return fail("Unknown answer type on a pad key:", { answerType: answerType, raw: raw });
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const resetTarget = event.target.closest("[data-reset-key]");
+  if (resetTarget !== null) {
+    localStorage.removeItem(resetTarget.dataset.resetKey);
+    location.reload();
+    return;
+  }
+  const modeTarget = event.target.closest("[data-mode]");
+  if (modeTarget !== null) { setMode(modeTarget.dataset.mode); return; }
+
+  const moduleTarget = event.target.closest("[data-module]");
+  if (moduleTarget !== null) { setModule(moduleTarget.dataset.module); return; }
+
+  const keyTarget = event.target.closest(".key[data-value]");
+  if (keyTarget !== null && current !== null) {
+    submitAnswer(parsePadValue(current.mod.answer, keyTarget.dataset.value));
+    return;
+  }
+
+  const actTarget = event.target.closest("[data-act]");
+  if (actTarget === null) return;
+  const act = actTarget.dataset.act;
+  switch (act) {
+    case "next": nextQuestion(); break;
+    case "skip": skipQuestion(); break;
+    case "hint": revealSolution(); break;
+    case "example": showExample(); break;
+    case "work": current.showWork = true; renderDrill(); break;
+    case "goto-full": setModule("full"); break;
+    case "goto-learn": setModule("learn"); break;
+    case "goto-methods": setModule("learn"); flashSection("methods"); break;
+    case "cheat-tab":
+      learnState.cheatTab = actTarget.dataset.tab;
+      renderLearn();
+      break;
+    case "toggle-howto":
+      settings.showHowTo = !settings.showHowTo;
+      persistSettings();
+      renderDrill();
+      break;
+    case "again": startAgain(); break;
+    case "practice": setMode("practice"); break;
+    case "stats": openStats(); break;
+    case "close-stats": dialogs.stats.close(); break;
+    case "learn-random":
+      learnState.ex = randomExample();
+      renderLearn();
+      break;
+    case "learn-date": applyLearnDate(); break;
+    case "learn-reroll-method":
+      learnState.comparisonYear = instructiveComparisonYear();
+      renderLearn();
+      break;
+    case "use-method":
+      settings.method = actTarget.dataset.method;
+      persistSettings();
+      applySettingsToControls();
+      writeHash(false);
+      current = null;
+      renderAll();
+      break;
+    default:
+      fail("Unhandled action:", { act: act });
+  }
+});
+
+/* Rolling a random date is one click and earns nothing; entering a date you
+ * actually wanted to know is what counts as studying it. */
+function finishWalkthrough() {
+  checkAchievements({ kind: "walkthrough" });
+}
+
+function applyLearnDate() {
+  const year = Number(document.getElementById("learnYear").value);
+  const month = Number(document.getElementById("learnMonth").value);
+  const day = Number(document.getElementById("learnDay").value);
+  if (!Number.isInteger(year) || year < MIN_YEAR || year > MAX_YEAR ||
+      !Number.isInteger(month) || month < 1 || month > 12 ||
+      !Number.isInteger(day) || day < 1 || day > daysInMonth(month, isLeapYear(Math.min(Math.max(year, MIN_YEAR), MAX_YEAR)))) {
+    showBanner("<b>That date does not exist:</b> " + esc(JSON.stringify({ year: year, month: month, day: day })) +
+      " — years " + MIN_YEAR + "–" + MAX_YEAR + ", months 1–12, and a day inside the month.");
+    return;
+  }
+  banner.classList.add("hidden");
+  learnState.ex = explainDate(year, month, day, settings.method);
+  renderLearn();
+  finishWalkthrough();
+}
+
+document.addEventListener("keydown", (event) => {
+  const open = document.querySelector("dialog[open]");
+  if (open !== null) return;
+  if (event.metaKey || event.ctrlKey) return;
+  const tag = event.target.tagName;
+  if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+
+  if (event.altKey) {
+    if (!/^[0-7]$/.test(event.key)) return;
+    const n = Number(event.key);
+    setModule(n === 0 ? "learn" : DRILLS[n - 1].id);
+    event.preventDefault();
+    return;
+  }
+
+  const key = event.key;
+  if (key === "?") { dialogs.help.showModal(); event.preventDefault(); return; }
+  if (key === "[") { stepBy(-1); event.preventDefault(); return; }
+  if (key === "]") { stepBy(1); event.preventDefault(); return; }
+  if (key.toLowerCase() === "t") { openStats(); event.preventDefault(); return; }
+  if (key.toLowerCase() === "m") { setMode(MODES[(MODES.indexOf(state.mode) + 1) % MODES.length]); event.preventDefault(); return; }
+
+  if (moduleById(state.module).kind !== "drill") return;
+  if (current === null) return;
+
+  if (session.over) {
+    if (key === "Enter") { startAgain(); event.preventDefault(); }
+    return;
+  }
+  if (key.toLowerCase() === "e") { showExample(); event.preventDefault(); return; }
+  if (current.answered) {
+    if (key === "Enter") { nextQuestion(); event.preventDefault(); }
+    return;
+  }
+  if (key.toLowerCase() === "s") { skipQuestion(); event.preventDefault(); return; }
+  if (key.toLowerCase() === "h") { revealSolution(); event.preventDefault(); return; }
+
+  const answerType = current.mod.answer;
+  if (answerType === "yesno") {
+    if (key.toLowerCase() === "y") { submitAnswer(true); event.preventDefault(); }
+    if (key.toLowerCase() === "n") { submitAnswer(false); event.preventDefault(); }
+    return;
+  }
+  if (answerType === "number") {
+    if (/^[0-9]$/.test(key)) {
+      const next = (typed + key).slice(-2);
+      typed = Number(next) > 31 ? key : next;
+      renderTyped();
+      event.preventDefault();
+      return;
+    }
+    if (key === "Backspace") { typed = typed.slice(0, -1); renderTyped(); event.preventDefault(); return; }
+    if (key === "Enter" && typed !== "") { submitAnswer(Number(typed)); event.preventDefault(); }
+    return;
+  }
+  if (/^[0-6]$/.test(key)) { submitAnswer(Number(key)); event.preventDefault(); }
+});
+
+window.addEventListener("popstate", () => {
+  readHash();
+  if (session.mode !== state.mode) resetSession();
+  current = null;
+  renderAll();
+});
+window.addEventListener("resize", resizeFx);
+
+/* ============================ settings controls ========================== */
+
+function applySettingsToControls() {
+  document.getElementById("methodSel").value = settings.method;
+  document.getElementById("difficultySel").value = settings.difficulty;
+  document.getElementById("rangeMin").value = settings.customMin;
+  document.getElementById("rangeMax").value = settings.customMax;
+  document.getElementById("sprintSel").value = String(settings.sprintSeconds);
+  document.getElementById("motionSel").value = settings.motion;
+  document.getElementById("themeSel").value = settings.theme;
+  document.getElementById("soundChk").checked = settings.sound;
+  document.documentElement.setAttribute("data-theme", settings.theme);
+  document.documentElement.setAttribute("data-motion", settings.motion);
+}
+
+function changeSetting(field, value) {
+  settings[field] = value;
+  persistSettings();
+  applySettingsToControls();
+  writeHash(false);
+  invalidateDerived();
+  current = null;
+  renderAll();
+}
+
+function wireControls() {
+  const difficultySel = document.getElementById("difficultySel");
+  difficultySel.innerHTML = DIFFICULTIES.map((d) => "<option value='" + d.id + "'>" + esc(d.label) + "</option>").join("");
+  difficultySel.addEventListener("change", () => changeSetting("difficulty", difficultySel.value));
+
+  document.getElementById("methodSel").addEventListener("change", (e) => changeSetting("method", e.target.value));
+  document.getElementById("sprintSel").addEventListener("change", (e) => changeSetting("sprintSeconds", Number(e.target.value)));
+  document.getElementById("motionSel").addEventListener("change", (e) => changeSetting("motion", e.target.value));
+  document.getElementById("themeSel").addEventListener("change", (e) => changeSetting("theme", e.target.value));
+  document.getElementById("soundChk").addEventListener("change", (e) => changeSetting("sound", e.target.checked));
+
+  for (const [id, field] of [["rangeMin", "customMin"], ["rangeMax", "customMax"]]) {
+    document.getElementById(id).addEventListener("change", (e) => {
+      const value = Number(e.target.value);
+      if (!Number.isInteger(value) || value < MIN_YEAR || value > MAX_YEAR) {
+        showBanner("<b>Year out of range:</b> " + esc(JSON.stringify({ field: field, value: e.target.value })) +
+          " — must be an integer between " + MIN_YEAR + " and " + MAX_YEAR + ".");
+        e.target.value = settings[field];
+        return;
+      }
+      banner.classList.add("hidden");
+      changeSetting(field, value);
+    });
+  }
+
+  document.getElementById("modeHelp").innerHTML = MODES.map((mode) => {
+    const info = MODE_INFO[mode];
+    return "<tr><td>" + info.emoji + "</td><td><b>" + esc(info.label) + "</b></td><td>" + esc(info.blurb) + "</td></tr>";
+  }).join("");
+  for (const button of document.querySelectorAll("#modeSeg button"))
+    button.title = MODE_INFO[button.dataset.mode].label + " — " + MODE_INFO[button.dataset.mode].blurb;
+
+  /* a click that lands on the dialog element itself is a click on its backdrop */
+  for (const dialog of Object.values(dialogs))
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+
+  document.getElementById("settingsBtn").addEventListener("click", () => dialogs.settings.showModal());
+  document.getElementById("helpBtn").addEventListener("click", () => dialogs.help.showModal());
+  document.getElementById("statsBtn").addEventListener("click", openStats);
+  document.getElementById("aboutBtn").addEventListener("click", () => {
+    setModule("learn");
+    flashSection("credits");
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", exportData);
+  document.getElementById("wipeBtn").addEventListener("click", () => {
+    if (!confirm("Erase all history, statistics and achievements stored in this browser?")) return;
+    for (const key of Object.values(STORAGE_KEYS)) localStorage.removeItem(key);
+    location.reload();
+  });
+}
+
+function exportData() {
+  const payload = { exportedAt: new Date().toISOString(), settings: settings, progress: progress, achievements: unlocked, history: history };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "doomsday-trainer-" + todayKey(Date.now()) + ".json";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* =============================== self-test ===============================
+ * Reachable at index.html?selftest=1 (make test-page); there is no button for
+ * it on the page itself. */
+
+function selfTestPage() {
+  const startedAt = performance.now();
+  const result = runSelfTest(MIN_YEAR, MAX_YEAR);
+  const took = ((performance.now() - startedAt) / 1000).toFixed(2);
+  document.getElementById("app").innerHTML =
+    "<div class='panel card' style='grid-area:main'><h2>Self-test</h2>" +
+    "<p class='mono'>range " + MIN_YEAR + "–" + MAX_YEAR + " · " + result.checked.toLocaleString() +
+    " dates · both offset methods · " + took + "s</p>" +
+    (result.failures.length === 0
+      ? "<div class='verdict good'>✔ every date matches the browser's own calendar</div>"
+      : "<div class='verdict bad'>✘ " + result.failures.length + " failures</div><pre class='mono'>" +
+        esc(JSON.stringify(result.failures, null, 1)) + "</pre>") +
+    "<div class='actions'><a class='btn primary' href='" + location.pathname + "'>Back to the trainer</a></div></div>";
+}
+
+/* ================================= init ================================== */
+
+function init() {
+  if (new URLSearchParams(location.search).get("selftest") === "1") { selfTestPage(); return; }
+  readHash();
+  wireControls();
+  applySettingsToControls();
+  resizeFx();
+  resetSession();
+  writeHash(false);
+  renderAll();
+  const nudge = practiceNudge(practiceRhythm());
+  if (nudge.level === "warn") toast("⏳", "Streak at risk", nudge.text);
+}
+
+init();
+</script>
+</body>
+</html>
